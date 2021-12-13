@@ -31,12 +31,8 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 #client = Client(cluster)
 client = Client('0.0.0.0:5500')
 
-try: 
-   with open(os.environ.get('EDR_CONFIG')) as fh:
-      CONFIG = yaml.load(fh)
-except:
-   with open('EDR/config/config_local.yml') as fh:
-      CONFIG = yaml.load(fh)
+with open(os.environ.get('EDR_CONFIG')) as fh:
+   CONFIG = yaml.load(fh)
 base_url=CONFIG['server']['url']
 
 api_ = API(CONFIG)
