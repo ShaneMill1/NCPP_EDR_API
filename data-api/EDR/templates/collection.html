@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} Collections {% endblock %}
+{% block crumbs %}{{ super() }} 
+/ <a href="././">Collections</a>
+{% endblock %}
+{% block body %}
+    <section id="collection">
+      <div>{{ data['description'] }}</div>
+      <div><a title="List instances" href="{{ config['server']['url'] }}/collections/{{ data['name'] }}/?f=html">List instances of {{ data['title'] }} collection</a></div>
+      <h2>Links</h2>
+      <ul>
+        {% for link in data[0] %}
+          <li><a title="{{ link['title'] }}" href="{{ link['href'] }}">{{ link['title'] }}</a></li>
+        {% endfor %}
+      </ul>
+     
+        <h2>Current instances of the {{ data['title'] }} collection </h2>
+        {% for instance in data['instances']  %}
+        <div class="collapse">
+            <input type="checkbox" id="collapse-{{instance['title']}}" checked aria-hidden="true">
+            <label for="collapse-{{instance['title']}}" aria-hidden="true"><h2><small>{{instance['title']}}</small></h2></label>
+            <div>
+              <table class="striped" style="overflow: visible;">
+                <caption>{{instance['title']}} metadata</caption>
+                <thead>
+                <tr  itemprop="dataset" itemscope itemtype="http://schema.org/Dataset">
+                  <th id="thdesc" span="2">
+                      <meta itemprop="url" content="{{ instance['links'][3]['href']}}" />
+                      <a  title="{{ instance['description'] | striptags | truncate }}" 
+                        href="{{ instance['links'][3]['href']}}">
+                        <span itemprop="name">{{ instance['description'] | striptags | truncate }}</span></a>
+                    </th>
+
+                </tr>
+              </thead>
+                <tbody>
+                  <tr itemprop="dataset" itemscope itemtype="http://schema.org/geoCovers">
+                    <td data-label="name">
+                      <div>
+                          <meta itemprop="" content="" />
+                          Spatial extent  
+                      </div>
+                    </td>
+                    <td itemprop="description" data-label="spatial">
+                      {% for coord in instance['extent']['spatial'] %}
+                        {{coord}}  
+                      {% endfor %}
+                    </td>
+                  </tr>
+                  {% if 'temporal' in instance['extent'] %}            
+                  <tr itemprop="dataset" itemscope itemtype="https://schema.org/temporalCoverage">
+                    <td data-label="name">
+                        <div>
+                            <meta itemprop="" content="" />
+                            Temporal extent  
+                        </div>
+                      </td>
+                    <td itemprop="description" data-label="temporal">
+                          {% for coord in instance['extent']['temporal'] %}
+                          {{coord}} 
+                          {% endfor %}
+                    </td>
+                  </tr>
+                  {% endif %}            
+                  {% if 'vertical' in instance['extent'] %}            
+                  <tr itemprop="dataset" itemscope itemtype="https://schema.org/height">
+                    <td data-label="name">
+                        <div>
+                            <meta itemprop="" content="" />
+                            Vertical extent  
+                        </div>
+                      </td>
+                    <td itemprop="description" data-label="vertical">
+                          {% for coord in instance['extent']['vertical'] %}
+                          {{coord}} 
+                          {% endfor %}
+                    </td>
+                  </tr>
+                  {% endif %}            
+                  <tr itemprop="dataset" itemscope itemtype="https://schema.org/propertyID">
+                    <td data-label="name">
+                        <div>
+                            <meta itemprop="" content="" />
+                            Data parameters  
+                        </div>
+                      </td>
+                    <td itemprop="description" data-label="parameters">
+                          {% for p in data['parameters'] %}
+                          <span class="bordered"><strong>{{p}}</strong></span> 
+                          {% endfor %}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+      </div>
+          {% endfor %}
+        </section>
+{% endblock %}

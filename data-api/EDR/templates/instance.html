@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} Collections {% endblock %}
+{% block crumbs %}{{ super() }} 
+/ <a href="/collections">Collections</a>
+/ <a href="././">{{data['title']}}</a>
+/ <a href="./{{data['instance']}}">{{data['instance']}}</a>
+{% endblock %}
+{% block body %}
+    <section id="collection">
+      <div>{{ data['description'] }}</div>
+      <h2>Links</h2>
+      <ul>
+        {% for link in data['links'] %}
+          {% if (not (link['type'] == 'point') and (not (link['type'] == 'polygon'))) %}
+            <li><a title="{{ link['title'] }}" href="{{ link['href'] }}">{{ link['title'] }}</a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+     
+              <table class="striped" style="overflow: visible;">
+                <caption>Metadata for the {{data['instance']}} {{data['title']}} instance </caption>
+                <thead>
+                  {% for link in data['links'] %}
+                  {% if link['type'] == 'point' or link['type'] == 'polygon' %}
+                    <tr  itemprop="dataset" itemscope itemtype="http://schema.org/Dataset">
+                      <th id="thlink">
+                          <meta itemprop="url" content="{{ link['href']}}" />
+                          <a  title="{{ link['title'] | striptags | truncate }}" 
+                            href="{{ link['href']}}">
+                            {{ link['title'] | striptags | truncate }}</a>
+                      </th>
+                      <th id="thdesc">
+                        <h3><small>{{ link['type'] }} query demo and url builder</small></h3>
+                      </th>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+
+              </thead>
+                <tbody>
+                  <tr itemprop="dataset" itemscope itemtype="http://schema.org/geoCovers">
+                    <td itemprop="description" data-label="spatial">
+                      <div class="container" style="width:100%">
+                        <div class="row"><h1><small>Geo-Temporal extent of the instance</small></h1></div>
+                        <div class="row" style="width: 90%;">
+                          <div class="col-sm-5">Coord reference as WKT:</div>
+                          <div class="col-sm-7"><small>{{data['instanceAxes']['attributes']['wkt']}}</small></div>
+                          </div>
+                        <div class="row">
+                                <div class="container" style="width:100%"><span class="bordered">
+                                    <div class="row"><h2><small>X Axis</small></h2></div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Name:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['x']['label']}}</div>         
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Lower bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['x']['lowerBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Upper bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['x']['upperBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h3><small>Units:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['x']['uomLabel']}}</div>    
+                                    </div>
+                                </span></div>
+                            </div>
+                            <div class="row">
+                                <div class="container" style="width:100%" ><span class="bordered">
+                                    <div class="row"><h2><small>Y Axis</small></h2></div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Name:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['y']['label']}}</div>         
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Lower bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['y']['lowerBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Upper bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['y']['upperBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h3><small>Units:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['y']['uomLabel']}}</div>    
+                                    </div>
+                                </span></div>
+                            </div>
+                            {% if 'z' in data['instanceAxes'] %}
+                            <div class="row">
+                                <div class="container" style="width:100%"><span class="bordered">
+                                    <div class="row"><h2><small>Vertical Axis</small></h2></div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Name:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['z']['label']}}</div>         
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Lower bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['z']['lowerBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Upper bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['z']['upperBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h3><small>Units:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['z']['uomLabel']}}</div>    
+                                    </div>
+                                </span></div>
+                            </div>
+                            {% endif %}                            
+                            {% if 't' in data['instanceAxes'] %}
+                            <div class="row">
+                                <div class="container" style="width:100%"><span class="bordered">
+                                    <div class="row"><h2><small>Time Axis</small></h2></div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Name:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['t']['label']}}</div>         
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Lower bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['t']['lowerBound']}}</div>
+                                    </div>
+                                    <div class="row">
+                                    <div class="col-sm-5">
+                                        <h3><small>Upper bound:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['t']['upperBound']}}</div>
+                                    </div>
+                                    <div class="row" itemprop="dataset" itemscope itemtype="https://schema.org/temporalCoverage" >
+                                        <div class="col-sm-5">
+                                            <h3><small>Units:</small></h3></div><div class="col-sm-7"> {{data['instanceAxes']['t']['uomLabel']}}</div>    
+                                    </div>
+                                </span></div>
+                            </div>
+                            {% endif %}                            
+                      </div>
+                    </td>
+                  </tr>                     
+                  <tr>
+                      <td>
+                          Parameters
+                      </td>
+                    </tr>
+                  {% for parameter in data['parameters'] %} 
+                  <tr itemprop="dataset" itemscope itemtype="https://schema.org/variableMeasured">
+                    <td>
+                      <div class="container">
+                        <div class="row" style="background-color:#f8f8f8">
+                            <div class="col-sm-5">
+                                <h2><small>name:</small></h2>
+                              </div>
+                              <div class="col-sm-7">
+                                <div class="row">
+                                    {{data['parameters'][parameter]['description']['en']}}
+                                </div>
+                              </div>
+                        </div>
+                        <div class="row" style="background-color:#eeeeee">
+                            <div class="col-sm-5">
+                                <h2><small>id:</small></h2>
+                              </div>
+                              <div class="col-sm-7">
+                                <div class="row">
+                                    <div class="col-sm-2">id</div>
+                                    <div class="col-sm-10">
+                                        {{data['parameters'][parameter]['observedProperty']['id']}}
+                                    </div>                                   
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-2">label</div>
+                                    <div class="col-sm-10">
+                                        {{data['parameters'][parameter]['observedProperty']['label']['en']}}
+                                    </div>                                   
+                                </div>
+                              </div>
+                        </div>
+                        <div class="row" style="background-color:#f8f8f8">
+                            <div class="col-sm-5">
+                                <h2><small>unit:</small></h2>
+                              </div>
+                              <div class="col-sm-7">
+                                <div class="row">
+                                    <div class="col-sm-2">label</div>
+                                    <div class="col-sm-10">
+                                        {{data['parameters'][parameter]['unit']['label']['en']}}
+                                    </div>                                   
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-2">symbol</div>
+                                    <div class="col-sm-10">
+                                        {{data['parameters'][parameter]['unit']['symbol']['value']}}
+                                    </div>                                   
+                                </div>
+                              </div>
+                        </div>
+                        <div class="row" style="background-color:#eee">
+                            <div class="col-sm-5">
+                                <h2><small>Parameter extent:</small></h2>
+                              </div>
+                              <div class="col-sm-7">
+                                  <div class="row">
+                                    <div class="col-sm-3">
+                                      <div style="background-color:#f8f8f8">
+                                          <meta itemprop="" content="" />
+                                          horizontal extent of parameter  
+                                      </div>
+                                    </div>
+                                    <div class="col-sm-9">
+                                      <div class="container">
+                                        <div class="row" style="background-color:#eeeeee">
+                                          <div class="col-sm-12">
+                                            <div class="row">
+                                                <div class="col-sm-5">
+                                                    <h2><small>coords:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['horizontal']['coordinates'][0]}},{{data['parameters'][parameter]['extent']['horizontal']['coordinates'][1]}}</div>
+                                            </div>
+                                            <div class="row" style="background-color:#f8f8f8">
+                                              <div class="col-sm-5">
+                                                  <h2><small>labels:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['horizontal']['name'][0]}},{{data['parameters'][parameter]['extent']['horizontal']['name'][1]}}</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div class="row" style="background-color:#eeeeee">
+                                            <div class="col-sm-5">
+                
+                                                <h2><small>values:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['horizontal']['geographic']}}</div>
+                                        </div>  
+                                      </div>
+                                    </div>
+                                  </div>            
+                                  <div class="row" style="background-color:#f8f8f8">
+                                    <div class="col-sm-3">
+                                      <div>
+                                          <meta itemprop="" content="" />
+                                          vertical extent of parameter  
+                                      </div>
+                                    </div>
+                                    <div class="col-sm-9">
+                                      {% if 'vertical' in data['parameters'][parameter]['extent'] %}
+                
+                                      <div class="container">
+                                        <div class="row" style="background-color:#eeeeee">
+                                          <div class="col-sm-12">
+                
+                                            <div class="row" style="background-color:#f8f8f8">
+                                                <div class="col-sm-5">
+                                                    <h2><small>coords:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['vertical']['coordinates'][0]}}</div>
+                                            </div>
+                                            <div class="row" style="background-color:#eeeeee">
+                                              <div class="col-sm-5">
+                                                  <h2><small>labels:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['vertical']['name'][0]}}</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div class="row" style="background-color:#f8f8f8">
+                                            <div class="col-sm-5">
+                                                <h2><small>values:</small></h2></div><div class="col-sm-7"> 
+                                              {% for coord in data['parameters'][parameter]['extent']['vertical']['range'] %}
+                                              {{coord}}  
+                                            {% endfor %}                          </div>
+                                        </div>  
+                                      </div>
+                                      {% endif %}
+                                    </div>
+                                  </div>            
+                                  <div class="row" style="background-color:#eeeeee">
+                                    {% if 'temporal' in data['parameters'][parameter]['extent'] %}
+
+                                    <div class="col-sm-3">
+                                        <div>
+                                            <meta itemprop="" content="" />
+                                            Temporal extent of parameter
+                                        </div>
+                                      </div>
+                                    <div class="col-sm-9">
+                                        <div class="container">
+                                            <div class="row" style="background-color:#f8f8f8">
+                                              <div class="col-sm-12">
+                                                <div class="row" style="background-color:#eeeeee">
+                                                    <div class="col-sm-5">
+                                                        <h2><small>coords:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['temporal']['coordinates'][0]}}</div>
+                                                </div>
+                                                <div class="row" style="background-color:#f8f8f8">
+                                                  <div class="col-sm-5">
+                                                      <h2><small>labels:</small></h2></div><div class="col-sm-7"> {{data['parameters'][parameter]['extent']['temporal']['name'][0]}}</div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="row" style="background-color:#eeeeee">
+                                                <div class="col-sm-5">
+                    
+                                                    <h2><small>values:</small></h2></div><div class="col-sm-7">  <div class='timescroll'>
+                                                  {% for coord in data['parameters'][parameter]['extent']['temporal']['range'] %}
+                                                  {{coord}}  
+                                                {% endfor %} 
+                                              </div> 
+                                                </div>
+                                            </div>  
+                                          </div>
+                
+                                        </div>
+                                      {% endif %}    
+                                      </div>
+                              </div>
+                        </div>
+                      </div>                        
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  {% endfor %}                             
+                </tbody>
+              </table>
+        </section>
+{% endblock %}

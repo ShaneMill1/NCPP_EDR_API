@@ -1,0 +1,158 @@
+jpc_t1cod.lo: jpc_t1cod.c \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/stdio.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/features.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/cdefs.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/wordsize.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/gnu/stubs.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/gnu/stubs-64.h \
+ /home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stddef.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/types.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/typesizes.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/libio.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/_G_config.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/wchar.h \
+ /home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stdarg.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/stdio_lim.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/sys_errlist.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/stdio.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/stdlib.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/waitflags.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/waitstatus.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/endian.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/endian.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/byteswap.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/types.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/time.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/select.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/select.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/sigset.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/time.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/sysmacros.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/pthreadtypes.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/alloca.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/assert.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/math.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/huge_val.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/huge_valf.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/huge_vall.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/inf.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/nan.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/mathdef.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/mathcalls.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/mathinline.h \
+ ../include/jasper/jas_types.h ../include/jasper/jas_config.h \
+ /home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stdbool.h \
+ /home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stdint.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/stdint.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/wchar.h \
+ ../include/jasper/jas_math.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/string.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/xlocale.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/string.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/string2.h \
+ jpc_bs.h ../include/jasper/jas_stream.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/fcntl.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/fcntl.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/stat.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/unistd.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/posix_opt.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/environments.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/confname.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/getopt.h \
+ jpc_dec.h jpc_tsfb.h ../include/jasper/jas_seq.h jpc_fix.h \
+ ../include/jasper/jas_fix.h jpc_qmfb.h jpc_tagtree.h \
+ /home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include-fixed/limits.h \
+ /home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include-fixed/syslimits.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/limits.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/posix1_lim.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/local_lim.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/linux/limits.h \
+ /home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/posix2_lim.h \
+ jpc_cs.h ../include/jasper/jas_image.h ../include/jasper/jas_cm.h \
+ ../include/jasper/jas_icc.h jpc_cod.h jpc_mqdec.h jpc_mqcod.h \
+ jpc_t2cod.h jpc_t1cod.h
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/stdio.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/cdefs.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/wordsize.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/gnu/stubs.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/gnu/stubs-64.h:
+/home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stddef.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/types.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/typesizes.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/libio.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/_G_config.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/wchar.h:
+/home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stdarg.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/stdio_lim.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/sys_errlist.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/stdio.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/stdlib.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/waitflags.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/waitstatus.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/endian.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/endian.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/byteswap.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/types.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/time.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/select.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/select.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/sigset.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/time.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/sys/sysmacros.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/pthreadtypes.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/alloca.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/assert.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/math.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/huge_val.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/huge_valf.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/huge_vall.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/inf.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/nan.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/mathdef.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/mathcalls.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/mathinline.h:
+../include/jasper/jas_types.h:
+../include/jasper/jas_config.h:
+/home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stdbool.h:
+/home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include/stdint.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/stdint.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/wchar.h:
+../include/jasper/jas_math.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/string.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/xlocale.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/string.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/string2.h:
+jpc_bs.h:
+../include/jasper/jas_stream.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/fcntl.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/fcntl.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/stat.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/unistd.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/posix_opt.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/environments.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/confname.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/getopt.h:
+jpc_dec.h:
+jpc_tsfb.h:
+../include/jasper/jas_seq.h:
+jpc_fix.h:
+../include/jasper/jas_fix.h:
+jpc_qmfb.h:
+jpc_tagtree.h:
+/home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include-fixed/limits.h:
+/home/shane.mill/miniconda3/envs/shane-test/lib/gcc/x86_64-conda-linux-gnu/11.2.0/include-fixed/syslimits.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/limits.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/posix1_lim.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/local_lim.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/linux/limits.h:
+/home/shane.mill/miniconda3/envs/shane-test/x86_64-conda-linux-gnu/sysroot/usr/include/bits/posix2_lim.h:
+jpc_cs.h:
+../include/jasper/jas_image.h:
+../include/jasper/jas_cm.h:
+../include/jasper/jas_icc.h:
+jpc_cod.h:
+jpc_mqdec.h:
+jpc_mqcod.h:
+jpc_t2cod.h:
+jpc_t1cod.h:

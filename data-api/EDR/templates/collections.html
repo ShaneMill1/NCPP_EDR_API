@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }} Collections {% endblock %}
+{% block crumbs %}{{ super() }} 
+/ <a href="./collections">Collections</a>
+{% endblock %}
+{% block body %}
+    <section id="collections" itemscope itemtype="http://schema.org/DataCatalog">
+    <meta itemprop="url" content="{{ config['server']['url'] }}" />
+    <meta itemprop="name" content="{{ config['metadata']['identification']['title'] | striptags }}" />
+    <meta itemprop="description" content="{{ config['metadata']['identification']['description'] | striptags }}" />
+            <table class="striped" style="overflow: visible;">
+            <caption>Collections in this service</caption>
+            <thead>
+              <tr>
+                <th id="thName">Name</th>
+                <th id="thDesc">Description</th>
+              </tr>
+              </thead>
+              <tbody>
+                {% for collection in data['collections'] %}
+                <tr itemprop="dataset" itemscope itemtype="http://schema.org/Dataset">
+                  <td data-label="name">
+                    <meta itemprop="url" content="{{ collection['links'][3]['href']}}" />
+                    <a  title="{{ collection['title'] | striptags | truncate }}" 
+                      href="{{ collection['links'][3]['href']}}">
+                      <span itemprop="name">{{ collection['title'] | striptags | truncate }}</span></a>
+                  </td>
+                  <td itemprop="description" data-label="description">
+                    {{ collection['title'] | striptags | truncate }} 
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+    </section>
+{% endblock %}

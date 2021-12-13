@@ -1,0 +1,3 @@
+recursive-include pycsw *.xsd *.yaml *.html *.png *.ico
+include *.txt
+include README.md

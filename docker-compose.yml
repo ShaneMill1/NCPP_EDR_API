@@ -1,0 +1,19 @@
+version: '3.3'
+
+services:
+  data-api:
+    build: data-api
+    ports:
+      - "80:5010"
+      - "5500:5500"
+      - "5510:5510"
+#    volumes: 
+#      - '/edr-data/edr-test-data/:/data/'
+    restart: always
+#  ingest:
+#    build: ingest
+#    ports:
+#      - "8787:8787"
+#volumes: 
+#  - '/edr-data/edr-test-data/:/data/'
+#    restart: always

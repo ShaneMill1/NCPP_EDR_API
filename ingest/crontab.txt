@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+* * * * * su smill -c "touch /tmp/test.txt"
+
+#00 *  *  *  * su smill -c "cd /automated_ingest/NDFD && ./ndfd_download.py"
+00 *  *  *  * su smill -c "cd /automated_ingest/NDFD && ./ndfd_download_optimization.py"

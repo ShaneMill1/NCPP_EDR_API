@@ -1,0 +1,151 @@
+import pygrib
+import numpy as np
+import xarray as xr
+import zarr
+import multiprocessing
+
+
+def convert_to_zarr(grib_template):
+   ds=xr.open_dataset(grib_template,engine='pynio')
+   ds=ds[['TMP_P0_L100_GLL0','HGT_P0_L100_GLL0']]
+   ds.to_zarr('test')
+   return
+
+def convert_to_dict(grib_template):
+   #ds=xr.open_zarr('gfs_100_lat_0_lon_0_forecast_time2_Middle_cloud_layer')
+   ds=xr.open_zarr('test')
+   ds_dict=ds.to_dict()
+   return ds_dict
+
+def create_grib_old(ds_dict,grib_template):
+   data_vars=ds_dict['data_vars']
+   coords=ds_dict['coords']
+   dims=ds_dict['dims']
+   coord_dict={}
+   for c in coords:
+      coord_name=c
+      coord_data=coords[c]['data']
+      coord_dict.update({coord_name: coord_data})
+   data_values_list=[] 
+   for d in data_vars.keys():
+      long_name=data_vars[d]['attrs']['long_name'].lower()
+      level_type=data_vars[d]['attrs']['level_type'].lower()
+      data_values=data_vars[d]['data']
+      data_values_list.append(data_values)
+      try:
+         level=data_vars[d]['attrs']['level']
+      except:
+         pass
+      long_name=long_name.replace('(','')
+      long_name=long_name.replace(')','')
+      grbs=pygrib.open(grib_template)
+      print(level_type)
+      print(long_name)
+      for grb in grbs:
+         print(grb.parameterName.lower())
+         print(grb.typeOfLevel.lower())      
+   return
+
+
+def create_grib(ds_dict,grib_template):
+   data_vars=ds_dict['data_vars']
+   coords=ds_dict['coords']
+   dims=ds_dict['dims']
+   coord_dict={}
+   for c in coords:
+      coord_name=c
+      coord_data=coords[c]['data']
+      coord_dict.update({coord_name: coord_data})
+   msg_clone_list=list();data_values_list=list()
+   for d in data_vars.keys():
+      long_name=data_vars[d]['attrs']['long_name'].lower()
+      level_type=data_vars[d]['attrs']['level_type'].lower()
+      data_values=data_vars[d]['data']
+      data_values_list.append(data_values)
+      try:
+         level=data_vars[d]['attrs']['level']
+      except:
+         pass
+      long_name=long_name.replace('(','')
+      long_name=long_name.replace(')','')
+      level_type=level_type.replace('(','')
+      level_type=level_type.replace(')','')
+      level_type=level_type.split(' ')
+      grib=pygrib.open(grib_template)
+      for msg in grib:
+         name_og=msg.name.lower()
+         level_og=msg.nameOfFirstFixedSurface.lower()
+         if long_name in name_og and level_type[0] in level_og:
+            msg_clone=msg
+      msg_clone_list.append(msg_clone)
+   output=open('./output.grb',"wb")
+   for index,data_var_message in enumerate(msg_clone_list):
+      forecast_time_key=None;lv_key=None
+      for c in coord_dict:
+         if 'forecast_time' in c:
+            forecast_time_key=c
+         if 'lv_' in c:
+            lv_key=c
+         if 'lat' in c:
+            lat_key=c
+         if 'lon' in c:
+            lon_key=c
+      if forecast_time_key is None and lv_key is not None:
+         lv_list=coord_dict[lv_key]
+         print('option 1')
+         for idx,s in enumerate(lv_list):
+            lat_values=coord_dict[lat_key]
+            lon_values=coord_dict[lon_key]
+            data_var_message.latitudeOfFirstGridPointInDegrees=min(lat_values)
+            data_var_message.latitudeOfLastGridPointInDegrees=max(lat_values)
+            data_var_message.longitudeOfFirstGridPointInDegrees=min(lon_values)
+            data_var_message.longitudeOfLastGridPointInDegrees=max(lon_values)
+            data_var_message.Ni=len(lon_values)
+            data_var_message.Nj=len(lat_values)
+            data_var_message.level=lv_list[idx]
+            test=np.array(data_values_list[index][idx]).flatten()
+            data_var_message.values=test
+            data_var_message.packingType='grid_simple'
+            msg=data_var_message.tostring()
+            output.write(msg)
+      if forecast_time_key is not None and lv_key is None:
+         step_list=coord_dict[forecast_time_key]
+         print('option 2')
+         results=[]
+         for idx,s in enumerate(step_list):
+            lat_values=coord_dict[lat_key]
+            lon_values=coord_dict[lon_key]
+            data_var_message.latitudeOfFirstGridPointInDegrees=min(lat_values)
+            data_var_message.latitudeOfLastGridPointInDegrees=max(lat_values)
+            data_var_message.longitudeOfFirstGridPointInDegrees=min(lon_values)
+            data_var_message.longitudeOfLastGridPointInDegrees=max(lon_values)
+            data_var_message.Ni=len(lon_values)
+            data_var_message.Nj=len(lat_values)
+            step_list[idx]=int(s.total_seconds()/3600)
+            data_var_message.forecastTime=step_list[idx]
+            test=np.array(data_values_list[index][idx]).flatten()
+            value_list=list()
+            for t in test:
+               print(t)
+               value_list.append(t)
+            data_var_message.values=list()
+            data_var_message.values=value_list
+            data_var_message.packingType='grid_simple'
+            msg=data_var_message.tostring()
+            output.write(msg)
+         print('done setting '+str(idx))
+      elif forecast_time_key is not None and lv_key is not None:
+         print('option 3')
+      else:
+         print('did not work')
+   output.close()
+   return
+
+
+
+
+if __name__ == "__main__":
+   grib_template='/home/MDL/smill/WIAB-edr-update-specification/data-api/automated_ingest/GRIB/test_data/collections/gfs_100/00z/00z_gfs_100_template.grib'
+   #convert_to_zarr(grib_template)
+   ds_dict=convert_to_dict(grib_template)
+   create_grib(ds_dict,grib_template)

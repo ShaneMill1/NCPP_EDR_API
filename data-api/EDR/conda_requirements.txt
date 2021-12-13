@@ -1,0 +1,2 @@
+conda install --override-channels -c main -c conda-forge dicttoxml pynio pyproj proj4 metpy metar xmltodict shapely siphon fiona regionmask s3fs gdal zarr h5netcdf
+conda install -c anaconda requests flask flask-cors click pyyaml unicodecsv xarray dask netCDF4 bottleneck

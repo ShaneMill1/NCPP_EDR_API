@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="search"
+          type="application/opensearchdescription+xml"
+          href="http://data-api-c.mdl.nws.noaa.gov/OGC-EDR-API/csw?mode=opensearch&service=CSW&version=2.0.2&request=GetCapabilities&outputFormat=application/json"
+          title="Content search" />
+    <meta charset="{{ config['server']['encoding'] }}">
+    <title>{% block title %}{{ config['metadata']['identification']['title'] }} -{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="language" content="{{ config['server']['language'] }}">
+    <meta name="description" content="{{ config['metadata']['identification']['title'] }}">
+    <meta name="keywords" content="{{ config['metadata']['identification']['keywords']|join(',') }}">
+    <link rel="stylesheet" href="https://unpkg.com/mini.css@3.0.1/dist/mini-default.min.css">
+    <link rel="stylesheet" href="{{ config['server']['url'] }}/static/css/default.css">
+    <!--[if lt IE 9]>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+    {% for link in data['links'] %}
+      <link rel="{{ link['rel'] }}" type="{{ link['type'] }}" title="{{ link['title'] }}" href="{{ link['href'] }}"/>
+      {% if (link['rel']=="self" and link['type']=="text/html") %}
+      <link rel="canonical" href="{{ link['href'].split('?')[0] }}" />
+      {% endif %}
+    {% endfor %}
+    {% block extrahead %}
+    {% endblock %}
+  </head>
+  <body>
+    <header class="sticky row">
+      <div class="col-sm-12 col-md-10 col-md-offset-1">
+        <a role="button" href="{{ config['server']['url'] }}">
+          <span>{{ config['metadata']['identification']['title'] }}</span></a>
+        <a href="mailto:{{ config['metadata']['contact']['email'] }}" role="button" style="float:right">Contact</a>
+      </div>
+    </header>
+    <div class="sticky row crumbs">
+      <div class="col-sm-12 col-md-10 col-md-offset-1">
+        {% block crumbs %}
+        <a href="{{ config['server']['url'] }}">Home</a>
+        {% endblock %} 
+        <span style="float:right">
+          <a href="{{ data['links'] | map(rel='self') | attr('href') }}?f=json">JSON</a>
+        </span>
+      </div>
+    </div>
+    <main>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12 col-md-10 col-md-offset-1">
+          <br/>
+          {% block body %}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+    </main>
+    <div class="footer">
+      <div class="row">
+
+      </div>
+    </div>
+    {% block extrafoot %}
+    {% endblock %}
+  </body>
+</html>
