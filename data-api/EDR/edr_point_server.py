@@ -22,7 +22,7 @@ from dask.distributed import Client, LocalCluster
 
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 
 
 #This is where we turn on/off dask cluster
@@ -370,7 +370,6 @@ def collection():
     response = make_response(content, status_code)
     if headers:
         response.headers = headers
-
     return response
 
 @app.route('/metadata/', strict_slashes=False)
