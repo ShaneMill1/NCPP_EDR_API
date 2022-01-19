@@ -4,7 +4,7 @@ services:
   data-api:
     build: data-api
     ports:
-      - "80:5010"
+      - "443:5010"
       - "5500:5500"
       - "5510:5510"
 #    volumes: 
