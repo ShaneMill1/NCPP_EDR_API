@@ -1,8 +1,8 @@
 server:
     bind:
         host: 0.0.0.0
-        port: 443
-    url: https://d2wvhaxvg37uyu.cloudfront.net
+        port: 80
+    url: https://d3gyebu8v7bdv9.cloudfront.net
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     language: en-US

@@ -4,16 +4,16 @@ services:
   data-api:
     build: data-api
     ports:
-      - "443:5010"
+      - "80:5010"
       - "5500:5500"
       - "5510:5510"
 #    volumes: 
 #      - '/edr-data/edr-test-data/:/data/'
-    restart: always
+#    restart: always
 #  ingest:
 #    build: ingest
 #    ports:
 #      - "8787:8787"
-#volumes: 
-#  - '/edr-data/edr-test-data/:/data/'
+#    volumes: 
+#      - './data/:/data/'
 #    restart: always
