@@ -701,15 +701,15 @@ function updateOpacity(opacity_value) {
 
 
     function getData() {
-        if (urlparts[urllen-1] == "position") {
+        if (urlparts[urllen-1] == "position_query_selector") {
             getPointQuery();
-        } else if (urlparts[urllen-1] == "area" || urlparts[urllen-1] == "cube") {
+        } else if (urlparts[urllen-1] == "area_query_selector" || urlparts[urllen-1] == "cube_query_selector") {
             getPolygonQuery()
         }
-        else if (urlparts[urllen-1] == "trajectory") {
+        else if (urlparts[urllen-1] == "trajectory_query_selector") {
             getTrajectoryQuery()
         }
-        else if (urlparts[urllen-1] == "corridor") {
+        else if (urlparts[urllen-1] == "corridor_query_selector") {
             getCorridorQuery()
         }
     }
@@ -811,7 +811,7 @@ function updateOpacity(opacity_value) {
                     newHTML += createFormGroup(p,p.replace("_"," "),"checkbox",8,4,"parameter-name");
                 }
                 newHTML += '</div>';
-                if (window.location.href.indexOf("trajectory") > -1 || window.location.href.indexOf("corridor") > -1 ){
+                if (window.location.href.indexOf("trajectory_query_selector") > -1 || window.location.href.indexOf("corridor_query_selector") > -1 ){
                    newHTML += '<div class="bordered" >';
                    newHTML += '<div class="row">Type:<div class="col-sm-4"></div>';
                    newHTML += '<div class="col-sm-8"><select type="text" id="trajectory type" onchange="reload_page(this.value)">';
@@ -821,7 +821,7 @@ function updateOpacity(opacity_value) {
                    newHTML += '<option>XYZT</option>';
                    newHTML += '</select></div></div>'
                    newHTML += '</div>'
-                   if (window.location.href.indexOf("corridor") > -1 ){
+                   if (window.location.href.indexOf("corridor_query_selector") > -1 ){
                       newHTML += '<br>'
                       newHTML += '<div class="col-sm-8">corridor-width<input type="text" id="corridor-width" value="100">';
                       newHTML += '</input> kilometers (default is 100 km)</div><br>'
@@ -876,21 +876,18 @@ function updateOpacity(opacity_value) {
                 }
           
                 if ((capsJSON.parameters[fp].extent.vertical !== undefined) && (capsJSON.parameters[fp].extent.vertical.range.length > 0)) {
-                    //if (window.location.href.indexOf("position") > -1 || window.location.href.indexOf("area") > -1){
-                    //   newHTML += createSelectGroup('z-coord', capsJSON.parameters[fp].extent.vertical.range);
-                    //}
-                    if (window.location.href.indexOf("position") > -1 || window.location.href.indexOf("area") > -1 || window.location.href.indexOf("cube") > -1){
+                    if (window.location.href.indexOf("position_query_selector") > -1 || window.location.href.indexOf("area_query_selector") > -1 || window.location.href.indexOf("cube_query_selector") > -1){
                        newHTML += createSelectGroup('z-coord1', capsJSON.parameters[fp].extent.vertical.range);
                        newHTML += createSelectGroup('z-coord2', capsJSON.parameters[fp].extent.vertical.range);
                     }
                     form_block.innerHTML = newHTML;
                 }
 
-                if (urlparts[urllen-1] == "position") {
+                if (urlparts[urllen-1] == "position_query_selector") {
                     if (capsJSON['point-query-options'] !== undefined) {
                         newHTML += createSelectGroup('interpolation', capsJSON['point-query-options']['interpolation']);
                     }
-                } else if (urlparts[urllen-1] == "area" || urlparts[urllen-1] == "cube") {
+                } else if (urlparts[urllen-1] == "area_query_selector" || urlparts[urllen-1] == "cube_query_selector") {
                     if (capsJSON['polygon-query-options'] !== undefined) {
                         newHTML += createSelectGroup('interpolation-x', capsJSON['polygon-query-options']['interpolation-x']);
                         newHTML += createSelectGroup('interpolation-y', capsJSON['polygon-query-options']['interpolation-y']);
@@ -913,7 +910,7 @@ function updateOpacity(opacity_value) {
 
         document.getElementById("loading_wheel").style.cssText = "display:inline;left:50%;top:50%;width:35px;height:35px;z-index:10000;position:absolute;";
         removeLayers();  
-        let query_url = location.pathname
+        let query_url = location.pathname.replace('_query_selector','');
         let valid_url = true;
         if ((document.getElementById('coords')!== null) && (document.getElementById('coords').value.length > 0)) {
             query_url +='?coords=' + document.getElementById('coords').value;
@@ -1094,7 +1091,7 @@ function updateOpacity(opacity_value) {
         removeLayers();   
         document.getElementById("loading_wheel").style.cssText = "display:inline;left:50%;top:50%;width:35px;height:35px;z-index:10000;position:absolute;";
 
-        let query_url = location.pathname
+        let query_url = location.pathname.replace('_query_selector','');
         let valid_url = true;
         if ((document.getElementById('coords')!== null) && (document.getElementById('coords').value.length > 0)) {
             query_url +='?coords=' + document.getElementById('coords').value;
@@ -1269,7 +1266,7 @@ function updateOpacity(opacity_value) {
         }
         document.getElementById("loading_wheel").style.cssText = "display:inline;left:50%;top:50%;width:35px;height:35px;z-index:10000;position:absolute;";
         removeLayers();  
-        let query_url = location.pathname
+        let query_url = location.pathname.replace('_query_selector','');
         let valid_url = true;
         if ((document.getElementById('coords')!== null) && (document.getElementById('coords').value.length > 0)) {
             query_url +='?coords=' + document.getElementById('coords').value;
@@ -1456,7 +1453,7 @@ function updateOpacity(opacity_value) {
         }
         document.getElementById("loading_wheel").style.cssText = "display:inline;left:50%;top:50%;width:35px;height:35px;z-index:10000;position:absolute;";
         removeLayers();  
-        let query_url = location.pathname
+        let query_url = location.pathname.replace('_query_selector','');
         let valid_url = true;
         if ((document.getElementById('coords')!== null) && (document.getElementById('coords').value.length > 0)) {
             query_url +='?coords=' + document.getElementById('coords').value;
@@ -1658,22 +1655,22 @@ function updateOpacity(opacity_value) {
         map_center = [53.5, -2]
     } 
 
-    if (urlparts[urllen-1] == 'position') {
+    if (urlparts[urllen-1] == 'position_query_selector') {
         ispoint = true;
     }
-    else if (urlparts[urllen-1] == 'area') {
+    else if (urlparts[urllen-1] == 'area_query_selector') {
         ispolygon = true;
     //    zoom_level = 4;
     }
-    else if (urlparts[urllen-1] == 'cube') {
+    else if (urlparts[urllen-1] == 'cube_query_selector') {
         iscube = true;
     //    zoom_level = 4;
     }
-    else if (urlparts[urllen-1] == 'trajectory') {
+    else if (urlparts[urllen-1] == 'trajectory_query_selector') {
         istrajectory = true;
     //    zoom_level = 4;
     }
-    else if (urlparts[urllen-1] == 'corridor') {
+    else if (urlparts[urllen-1] == 'corridor_query_selector') {
         istrajectory = true;
     //    zoom_level = 4;
     }
@@ -1742,16 +1739,6 @@ function add_country_borders(){
             // Do marker specific actions
             layer.setLatLng(layer.getLatLng().wrap())
             coords = wkt.read(JSON.stringify(layer.toGeoJSON()));
-            old_array=coords['components'][0]
-            rounded_array=[]
-            for (let i = 0; i < old_array.length; i++) {
-               var x=Math.round(old_array[i]['x'],1);
-               var y=Math.round(old_array[i]['y'],1);
-               rounded_array[i]={};
-               rounded_array[i]['x']=x;
-               rounded_array[i]['y']=y;
-            }
-            coords['components'][0]=rounded_array;
         }
         else if (type === 'polygon') {
             removeLayers();            
