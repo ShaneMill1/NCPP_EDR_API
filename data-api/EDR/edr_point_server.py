@@ -136,6 +136,11 @@ def get_data(collection,identifier):
         return response
     except ProviderQueryError:
         return _render_j2_template(CONFIG, "index_p.html", None)
+   
+   
+@app.route('/collections/<collection>/<identifier>/position_query_selector')
+def get_query_selector(collection,identifier):
+        return _render_j2_template(CONFIG, "index_p.html", None)
 
 @app.route('/collections/<collection>/<identifier>/area')
 def get_polygon_data(collection, identifier):
@@ -150,8 +155,10 @@ def get_polygon_data(collection, identifier):
             response.headers = headers
 
         return response
-    except ProviderQueryError:
-        return _render_j2_template(CONFIG, "index_p.html", None)
+   
+@app.route('/collections/<collection>/<identifier>/area_query_selector')
+def get_polygon_query_selector(collection, identifier):
+   return _render_j2_template(CONFIG, "index_p.html", None)
 
 
 @app.route('/api', strict_slashes=False)
@@ -210,7 +217,9 @@ def get_data_automated(collection,identifier):
             response.headers = headers
 
         return response
-    except ProviderQueryError:
+   
+@app.route('/collections/<collection>/instances/<identifier>/position_query_selector', strict_slashes=False)
+def get_data_automated_query_selector(collection,identifier):
         return _render_j2_template(CONFIG, "index_p.html", None)
 
 
@@ -229,6 +238,10 @@ def get_polygon_data_automated(collection, identifier):
         return response
     except ProviderQueryError:
         return _render_j2_template(CONFIG, "index_p.html", None)
+   
+@app.route('/collections/<collection>/instances/<identifier>/area_query_selector')
+def get_polygon_data_automated_query_selector(collection, identifier):
+        return _render_j2_template(CONFIG, "index_p.html", None)
 
 
 @app.route('/collections/<collection>/instances/<identifier>/cube')
@@ -245,6 +258,10 @@ def get_cube_data_automated(collection, identifier):
 
         return response
     except ProviderQueryError:
+        return _render_j2_template(CONFIG, "index_p.html", None)
+   
+@app.route('/collections/<collection>/instances/<identifier>/cube_query_selector')
+def get_cube_data_automated_query_selector(collection, identifier):
         return _render_j2_template(CONFIG, "index_p.html", None)
 
 
@@ -264,7 +281,12 @@ def get_trajectory_data_automated(collection, identifier):
     except ProviderQueryError:
         return _render_j2_template(CONFIG, "index_p.html", None)
 
+   
+@app.route('/collections/<collection>/instances/<identifier>/trajectory_query_selector')
+def get_trajectory_data_automated_query_selector(collection, identifier):
+        return _render_j2_template(CONFIG, "index_p.html", None)
 
+   
 @app.route('/collections/<collection>/instances/<identifier>/corridor')
 def get_corridor_data_automated(collection, identifier):
 
@@ -279,6 +301,10 @@ def get_corridor_data_automated(collection, identifier):
 
         return response
     except ProviderQueryError:
+        return _render_j2_template(CONFIG, "index_p.html", None)
+   
+@app.route('/collections/<collection>/instances/<identifier>/corridor_query_selector')
+def get_corridor_data_automated_query_selector(collection, identifier):
         return _render_j2_template(CONFIG, "index_p.html", None)
 
 
