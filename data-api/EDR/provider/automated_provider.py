@@ -26,9 +26,7 @@ import re
 import cfgrib
 import zipfile
 import pathlib
-
 class AutomatedCollectionProvider(BaseProvider):
-
     def __init__(self,dataset,config):
         """initializer"""
         dsn=dataset.split('_')
@@ -79,7 +77,6 @@ class AutomatedCollectionProvider(BaseProvider):
        initial_time=datetime.datetime.strptime(initial_time, "%Y-%m-%d %H:%M:%S")
        return initial_time
  
-
     def pt_to_covjson(self,query_dict,coords,qtype):
        
        output=query_dict
@@ -262,13 +259,10 @@ class AutomatedCollectionProvider(BaseProvider):
        #need to take care of this by appending to list based on coordinates available:
        output['domain']["referencing"]=list()
        output['domain']["referencing"]=[{"coordinates":["y","x"],"system":{"type": "GeographicCRS","id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"}},{"coordinates": ["t"],"system": {"type": "TemporalRS","calendar":"Gregorian"}}]
-
        del output['coords']       
        del output['attrs']
        del output['dims']
        return output
-
-
     def query(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat):
        #using the collection meta, make query based on the dimensions, so the automated process would be to formulate kwargs from the dimension list
        #important coords is an array of [lon,lat]
@@ -344,7 +338,7 @@ class AutomatedCollectionProvider(BaseProvider):
              try:
                 z_arg={self.lvkey:float(z_value)}
              except:
-                z_arg={self.lvkey:int(z_value)}
+                z_arg={self.lvkey:str(z_value)}
              output=output.sel(**z_arg)
        if qtype=='point':
           output, output_boolean=get_point_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
@@ -358,13 +352,8 @@ class AutomatedCollectionProvider(BaseProvider):
        if qtype_endpoint=='corridor':
           output, output_boolean=get_corridor_data(self, dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
           return output, output_boolean
-
-
-
 #Sampling Geometry Type Modules
 #Eventually, even these modules can be separated out more to be included in the conversion modules
-
-
 def get_point_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
    query_args={self.latkey: coords[1], self.lonkey: coords[0]}
    lonattr=str(self.lonkey)
@@ -376,9 +365,6 @@ def get_point_data(self,dataset, qtype, coords, time_range, z_value, params, ins
    if outputFormat=="CoverageJSON": #this if statement eventually will only occur once for all geom types
       output=self.pt_to_covjson(output,coords,qtype)
    return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
-
-
-
 def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
           geometries=[];coord_list=list()
           #a new coords list is needed in order for rio.clip to correctly extract the polygon. It had a false offset of 1 in the wkt. Need to apply this only for bbox's
@@ -431,11 +417,12 @@ def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, i
                 root=self.dir_root+'/temp_dir/'
                 zip_file=f_location.split('/')[-1]+'.zip'
                 return flask.send_from_directory(root,zip_file,as_attachment=True), 'no_delete'
-
-
 def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
        initial_time=output[params[0]].initial_time
        initial_time=self.find_initial_time(initial_time)
+       if qtype=='linestringm' or qtype=='linestring':
+          if z_value:
+             output=output.sel({self.lvkey:z_value})
        if qtype == 'linestring':
           lat_list=list();lon_list=list()
           for m in coords:
@@ -494,11 +481,6 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
              actual_data=convert_traj_to_cf(self,output,output_dict,initial_time)
              conversion=actual_data.to_netcdf(self.dir_root+'/output-'+self.uuid+'.nc')
           return flask.send_from_directory(self.dir_root,'output-'+self.uuid+'.nc',as_attachment=True), self.dir_root+'/output-'+self.uuid+'.nc'
-
-
-
-
-
 def get_angles(vec_1,vec_2):
     """
     return the angle, in degrees, between two vectors
@@ -508,8 +490,6 @@ def get_angles(vec_1,vec_2):
     det = np.cross(vec_1,vec_2)
     angle_in_rad = np.arctan2(det,dot)
     return np.degrees(angle_in_rad)
-
-
 def simplify_by_angle(poly_in, deg_ratio_tol = 0.05):
     """
     try to remove persistent coordinate points that remain after
@@ -536,9 +516,6 @@ def simplify_by_angle(poly_in, deg_ratio_tol = 0.05):
        if a < deg_ratio_tol:
           index_remove_list.append(ida)
     return index_remove_list
-
-
-
 def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
              model_resolution=float(dataset.split('_')[2])
              try:
@@ -785,7 +762,6 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                          pass
                       for idx,l in enumerate(lat_list):
                          query_args={self.latkey: xr.DataArray(lat_list), self.lonkey: xr.DataArray(lon_list)}
-
                    if qtype=='linestringm':
                       query_args={self.latkey: xr.DataArray(lat_list), self.lonkey: xr.DataArray(lon_list), self.fkey: xr.DataArray(time_interp_list)}
                    if qtype=='linestringz':
@@ -795,7 +771,10 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                    if corridor_height == None or corridor_height=='0':
                       output_result=output.sel(query_args, method='nearest')
                       if z_value:
-                         output_result=output_result.sel({self.lvkey:z_value})
+                         try:
+                            output_result=output_result.sel({self.lvkey:z_value})
+                         except:
+                            pass
                       output_dict=output_result.to_dict()
                       output_list.append(output_result)
                       output_json=self.pt_to_covjson(output_dict,coords_list,qtype)
@@ -848,13 +827,7 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                 actual_data=convert_corridor_to_cf(self,output_list)
                 conversion=actual_data.to_netcdf(self.dir_root+'/output-'+self.uuid+'.nc')
                 return flask.send_from_directory(self.dir_root,'output-'+self.uuid+'.nc',as_attachment=True), self.dir_root+'/output-'+self.uuid+'.nc'
-
-
-
-
 #Conversion modules
-
-
 def convert_traj_to_cf(self,output,output_dict,initial_time):
              time_dt_list=list()
              if not isinstance(output[self.fkey].values,list):
@@ -918,9 +891,6 @@ def convert_traj_to_cf(self,output,output_dict,initial_time):
              actual_data.attrs['_FillValue']='nan'
              actual_data=actual_data.assign_attrs({"featureType": "trajectory"})
              return actual_data
-
-
-
 def convert_corridor_to_cf(self,output_list):
    actual_data=xr.Dataset()
    for idx,traj_output in enumerate(output_list):
@@ -938,9 +908,6 @@ def convert_corridor_to_cf(self,output_list):
    actual_data=actual_data.assign_attrs({"featureType": "trajectory"})
    actual_data.attrs['Conventions']='CF-1.7'
    return actual_data
-
-
-
 def export_geotiff(self,output):
    dim_tracker={}
    zip_bool=False
@@ -958,7 +925,7 @@ def export_geotiff(self,output):
       df=write_cog(output_array,fname=f_location)
    else:
       f_location=self.dir_root+'/temp_dir/'+self.uuid
-      os.mkdir(f_location)
+      os.makedirs(f_location,exist_ok=True)
       if len(dim_tracker.keys())==2:
          for element1 in dim_tracker[list(dim_tracker.keys())[0]]:
             print(str(element1)+'-----')
@@ -993,23 +960,3 @@ def export_geotiff(self,output):
          for f_name in base_path.iterdir():
             z.write(f_name)
    return f_location, zip_bool
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
