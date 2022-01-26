@@ -35,7 +35,7 @@ def create_collections(file_location,model):
    ds_dict={}
    ds=xr.open_dataset(file_location+'all.grb',engine='pynio')
    collection_dict={}
-   client=Client(n_workers=10)
+   client=Client(n_workers=5)
    for data_var in ds.data_vars:
       dv_ds=ds[data_var]
       dv_ds_params=list(dv_ds.dims)

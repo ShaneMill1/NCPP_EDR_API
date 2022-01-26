@@ -9,11 +9,11 @@ services:
       - "5510:5510"
 #    volumes: 
 #      - '/edr-data/edr-test-data/:/data/'
-#    restart: always
-#  ingest:
-#    build: ingest
-#    ports:
-#      - "8787:8787"
-#    volumes: 
-#      - './data/:/data/'
-#    restart: always
+    restart: always
+  ingest:
+    build: ingest
+    ports:
+      - "8787:8787"
+    volumes: 
+      - './data/:/data/'
+    restart: always
