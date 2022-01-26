@@ -2,7 +2,7 @@ server:
     bind:
         host: 0.0.0.0
         port: 5400
-    url: http://localhost:5400/
+    url: http://ec2-54-196-89-32.compute-1.amazonaws.com:5400/
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     language: en-US
@@ -103,6 +103,30 @@ metadata:
 
 datasets:
     # underscores are not allowed in dataset identifiers
+    automated_gfs:
+        name: gfs automated
+        title: gfs automated
+        description: gfs automated
+        extent:
+            spatial: 0.0,-90.0,359.9,90.0
+        instanceAxes:
+            x:
+                label: Longitude
+                lowerBound: 0.0
+                upperBound: 359.9
+                uomLabel: degrees
+            y:
+                label: Latitude
+                lowerBound: -90.0
+                upperBound: 90.0
+                uomLabel: degrees
+        provider:
+            name: automated_provider
+            type: automated_ingest
+            output_formats: ['CoverageJSON','GRIB','NetCDF','COGeotiff']
+            model: [gfs_100]
+            cycle: [00z]
+            data_source: /home/ec2-user/WIAB-NDFD-data-api/data/collections
     national_water_model:
         name: national_water_model
         title: National Water Model Reanalysis
