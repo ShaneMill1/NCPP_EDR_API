@@ -13,16 +13,18 @@ COPY ./start.sh /start.sh
 RUN conda update -n base -c defaults conda
 RUN conda env update --file env.yml 
 
-RUN groupadd smill
-RUN useradd -r -u 1001 -g smill smill
-RUN mkdir /home/smill
+RUN groupadd ec2-user
+RUN useradd -r -u 1001 -g ec2-user ec2-user
+RUN mkdir /home/ec2-user
 RUN mkdir /data
-RUN chown -R smill /automated_ingest /data /home/smill /var /tmp
-RUN chgrp -R smill /automated_ingest /data /home/smill
+RUN chown -R ec2-user /automated_ingest /data /home/ec2-user /var /tmp
+RUN chgrp -R ec2-user /automated_ingest /data /home/ec2-user
 RUN chmod 775 -R /automated_ingest /data /home /var /tmp /crontab.txt /start.sh
 WORKDIR /
+USER ec2-user
 
 ENV TZ=America/New_York
+
 # Make RUN commands use the new environment:
 SHELL ["conda", "run", "-n", "env", "/bin/bash", "-c"]
 CMD ["./start.sh"]

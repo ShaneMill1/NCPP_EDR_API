@@ -12,7 +12,6 @@ COPY ./crontab.txt /crontab.txt
 COPY ./start.sh /start.sh
 COPY EDR /EDR
 COPY ./build_search_engine.sh /build_search_engine.sh
-#COPY ./dask-worker-space /dask-worker-space
 RUN mkdir /dask-worker-space
 COPY ./nwm_times.csv /nwm_times.csv
 
@@ -21,18 +20,16 @@ RUN cd /EDR/search_engine/ogc_csw/ && python setup.py build && python setup.py i
 RUN chmod +x /start.sh
 RUN chmod +x /ndfd_download.sh
 
-RUN groupadd smill
-RUN useradd -r -u 1001 -g smill smill
-RUN mkdir /home/smill
+RUN groupadd ec2-user
+RUN useradd -r -u 1001 -g ec2-user ec2-user
+RUN mkdir /home/ec2-user
 RUN mkdir /data
-RUN chown -R smill /EDR /data /home/smill /var /tmp
-RUN chgrp -R smill /EDR /data /home/smill
+RUN chown -R ec2-user /EDR /data /home/ec2-user /var /tmp
+RUN chgrp -R ec2-user /EDR /data /home/ec2-user
 RUN chmod 775 -R /EDR /data /home /var /tmp /crontab.txt /build_search_engine.sh /start.sh /nwm_times.csv 
 RUN chmod 777 -R  /dask-worker-space
 WORKDIR /
-#COPY ./degrib /degrib
-#RUN chmod 755 /degrib
-USER smill
+USER ec2-user
 
 EXPOSE 5010
 EXPOSE 443
