@@ -109,6 +109,30 @@ metadata:
 
 datasets:
     # underscores are not allowed in dataset identifiers 
+    automated_gfs:
+        name: gfs automated
+        title: gfs automated
+        description: gfs automated
+        extent:
+            spatial: 0.0,-90.0,359.9,90.0
+        instanceAxes:
+            x:
+                label: Longitude
+                lowerBound: 0.0
+                upperBound: 359.9
+                uomLabel: degrees
+            y:
+                label: Latitude
+                lowerBound: -90.0
+                upperBound: 90.0
+                uomLabel: degrees
+        provider:
+            name: automated_provider
+            type: automated_ingest
+            output_formats: ['CoverageJSON','GRIB','NetCDF','COGeotiff']
+            model: [gfs_100]
+            cycle: [00z]
+            data_source: /data/collections
     wwa_active:
         name: wwa_active
         title: Active Watches, Warnings, and Advisories
