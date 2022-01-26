@@ -1742,12 +1742,31 @@ function add_country_borders(){
             // Do marker specific actions
             layer.setLatLng(layer.getLatLng().wrap())
             coords = wkt.read(JSON.stringify(layer.toGeoJSON()));
-
+            old_array=coords['components'][0]
+            rounded_array=[]
+            for (let i = 0; i < old_array.length; i++) {
+               var x=Math.round(old_array[i]['x'],1);
+               var y=Math.round(old_array[i]['y'],1);
+               rounded_array[i]={};
+               rounded_array[i]['x']=x;
+               rounded_array[i]['y']=y;
+            }
+            coords['components'][0]=rounded_array;
         }
         else if (type === 'polygon') {
             removeLayers();            
             validQ = true;
             coords = wkt.read(JSON.stringify(wrapLatLons(layer).toGeoJSON()));
+            old_array=coords['components'][0]
+            rounded_array=[]
+            for (let i = 0; i < old_array.length; i++) {
+               var x=Math.round(old_array[i]['x'],1);
+               var y=Math.round(old_array[i]['y'],1);
+               rounded_array[i]={};
+               rounded_array[i]['x']=x;
+               rounded_array[i]['y']=y;
+            }
+            coords['components'][0]=rounded_array;		
             area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0])
 
             if ((area > 3100000000000) && ((urlparts[urllen - 3]).indexOf("global") > -1))  {
@@ -1769,6 +1788,16 @@ function add_country_borders(){
         }
         else if (type === 'rectangle') {
            coords = wkt.read(JSON.stringify(wrapLatLons(layer).toGeoJSON()));
+           old_array=coords['components'][0]
+           rounded_array=[]
+           for (let i = 0; i < old_array.length; i++) {
+              var x=Math.round(old_array[i]['x'],1);
+              var y=Math.round(old_array[i]['y'],1);
+              rounded_array[i]={};
+              rounded_array[i]['x']=x;
+              rounded_array[i]['y']=y;
+           }
+           coords['components'][0]=rounded_array;		
            validQ=true;
         }
         if (validQ) {
