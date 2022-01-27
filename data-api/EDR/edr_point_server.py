@@ -32,7 +32,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 client = Client('0.0.0.0:5500')
 
 with open(os.environ.get('EDR_CONFIG')) as fh:
-   CONFIG = yaml.load(fh)
+   CONFIG = yaml.safe_load(fh)
 base_url=CONFIG['server']['url']
 
 api_ = API(CONFIG)
