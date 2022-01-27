@@ -1,5 +1,4 @@
 from datetime import datetime
-from datacube.utils.cog import write_cog
 import xarray as xr
 import geopandas as gpd
 import copy

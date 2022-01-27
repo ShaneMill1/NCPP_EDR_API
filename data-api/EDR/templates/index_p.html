@@ -1727,7 +1727,7 @@ function add_country_borders(){
 
 
 //----------------------------------
-
+    var coords_point;
     map.on(L.Draw.Event.DRAWSTART, function (event) {
         drawnItems.clearLayers();
     });
@@ -1739,6 +1739,10 @@ function add_country_borders(){
             // Do marker specific actions
             layer.setLatLng(layer.getLatLng().wrap())
             coords = wkt.read(JSON.stringify(layer.toGeoJSON()));
+            var x = coords['components'][0]['x'].toFixed(1);
+            var y = coords['components'][0]['y'].toFixed(1);
+	    coords['components'][0]['x']=x;
+	    coords['components'][0]['y']=y;		
         }
         else if (type === 'polygon') {
             removeLayers();            
@@ -1747,8 +1751,8 @@ function add_country_borders(){
             old_array=coords['components'][0]
             rounded_array=[]
             for (let i = 0; i < old_array.length; i++) {
-               var x=Math.round(old_array[i]['x'],1);
-               var y=Math.round(old_array[i]['y'],1);
+               var x=old_array[i]['x'].toFixed(1);
+               var y=old_array[i]['y'].toFixed(1);
                rounded_array[i]={};
                rounded_array[i]['x']=x;
                rounded_array[i]['y']=y;
