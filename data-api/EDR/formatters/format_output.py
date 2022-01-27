@@ -1068,7 +1068,7 @@ class FormatOutput(object):
                     "extent": {
                         "horizontal": util.horizontaldef(["longitude","latitude"],["x","y"],collection['extent']['spatial'].split(',')),
                     },
-                    "links": [util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','position','Position query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','position_query_selector','Position query UI for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/area','self','area','Area query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','area_query_selector','Area query UI for latest ' + collection['title'])]
+                    "links": [util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','position','Position query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position_query_selector','self','position_query_selector','Position query UI for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/area','self','area','Area query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/area_query_selector','self','area_query_selector','Area query UI for latest ' + collection['title'])]
 
                     }
         description['parameters'] = {}
