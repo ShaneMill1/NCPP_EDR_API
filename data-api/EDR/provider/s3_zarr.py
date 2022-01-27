@@ -3,6 +3,7 @@ import xarray as xr
 import geopandas as gpd
 import copy
 from EDR.provider import concatenate_covjson
+from datacube.utils.cog import write_cog
 import glob
 import json
 from shapely.geometry import Point, Polygon, LineString, MultiLineString

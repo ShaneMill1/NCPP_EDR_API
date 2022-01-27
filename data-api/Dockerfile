@@ -2,6 +2,7 @@ FROM continuumio/miniconda3
 RUN apt-get update && apt-get -y install acl vim curl bzip2 cron libzstd-dev libssl-dev libopenblas-base libopenblas-dev libproj-dev proj-data proj-bin libgeos-dev
 
 COPY ./env.yml /env.yml
+RUN conda update -n base -c defaults conda
 RUN conda env create --file env.yml
 ENV FLASK_APP=/EDR/edr_point_server.py
 ENV EDR_CONFIG=/EDR/config/config.yml

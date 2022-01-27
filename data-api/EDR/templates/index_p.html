@@ -535,7 +535,7 @@ input:checked + .slider:before {
 
 <div class="container">
   <div class="navbar">
-     <a href="/OGC-EDR-API">Home
+     <a href="/">Home
       <i class="fas fa-home"></i>
      </a>
      <div class="dropdown">
@@ -1705,7 +1705,7 @@ function updateOpacity(opacity_value) {
 
 function add_country_borders(){
    let xhr = new XMLHttpRequest();
-   xhr.open('GET', '/OGC-EDR-API/layers/country_borders.json');
+   xhr.open('GET', '/layers/country_borders.json');
    xhr.setRequestHeader('Content-Type', 'application/json');
    xhr.responseType = 'json';
    xhr.onload = function() {
@@ -2346,7 +2346,7 @@ function linearPalette (colors, steps=256) {
 
 function set_palette(dvalue) {
    const request = new XMLHttpRequest();
-   request.open('GET', '/OGC-EDR-API/static/color_palettes/'+dvalue+'.txt', true);
+   request.open('GET', '/static/color_palettes/'+dvalue+'.txt', true);
    request.onload = function() {
       if (request.status === 200) {
          var text=request.responseText;
@@ -2372,7 +2372,7 @@ function set_palette(dvalue) {
    function palette_dropdown() {
          var request = new XMLHttpRequest();
          var pal_sel=document.getElementById("palette_vals");
-         request.open('GET', '/OGC-EDR-API/palettes', true);
+         request.open('GET', '/palettes', true);
          request.onload = function() {
          if (request.status === 200) {
             const data = JSON.parse(request.responseText);
