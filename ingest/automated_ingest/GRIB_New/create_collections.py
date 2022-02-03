@@ -1,3 +1,4 @@
+#!/opt/conda/envs/env/bin/python
 import glob
 import shutil
 import xarray as xr
@@ -8,7 +9,7 @@ from datetime import datetime
 import os
 import uuid
 from distributed import Client
-
+import fsspec
 
 def expand_dims(d):
    d=d.expand_dims('valid_time')
@@ -42,6 +43,10 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict):
                lv_coord_val_string='_'.join(lv_coord_vals)
             else:
                 lv_coord_val_string=str(float(lv_coord_vals))
+            try:
+               ds=ds.expand_dims(coord)
+            except:
+               pass
       col_name_desc="_".join(list(ds.coords))+'_'+lv_coord_val_string
       if col_name_desc not in col_name_dict.keys():
          col_name_id=str(uuid.uuid4())
@@ -77,6 +82,8 @@ if __name__ == "__main__":
    model_run_time=datetime.today().isoformat().split('T')[0]+'T'+model_run+':00:00'
    download_grib_location=root_dir+'/'+model+'/'+model_run_time
    zarr_output_location='./zarr/'+model+'/'+model_run_time+'/'
+   zarr_output_location_string='s3://enviroapi-bucket-1/zarr/'+model+'/'+model_run_time+'/'
+   zarr_output_location=fsspec.get_mapper(zarr_output_location_string)                         
    if os.path.isdir(zarr_output_location):
       shutil.rmtree(zarr_output_location)
    create_collections(download_grib_location,zarr_output_location)

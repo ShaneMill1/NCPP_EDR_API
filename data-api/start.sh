@@ -2,6 +2,7 @@
 #crontab /crontab.txt
 #./build_search_engine.sh
 
+
 #set up dask scheduler
 /opt/conda/envs/env/bin/dask-scheduler --port 5500 --dashboard-address '0.0.0.0:5510' & 
 
