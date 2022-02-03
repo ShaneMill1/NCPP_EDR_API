@@ -83,7 +83,11 @@ class ThreddsCatalogueProvider():
         description["links"].append(util.createquerylinks(server + '/collections/' + collection['name'] + "_" + col.replace(
             " ", "-") + '/latest/position', 'self', 'position', 'Position query for latest ' + collection['name'] + "_" + col.replace(" ", "-")))
         description["links"].append(util.createquerylinks(server + '/collections/' + collection['name'] + "_" + col.replace(
+            " ", "-") + '/latest/position_query_selector', 'self', 'position_query_selector', 'Position query for latest ' + collection['name'] + "_" + col.replace(" ", "-")))
+        description["links"].append(util.createquerylinks(server + '/collections/' + collection['name'] + "_" + col.replace(
             " ", "-") + '/latest/area', 'self', 'area', 'Area query for latest ' + collection['name'] + "_" + col.replace(" ", "-")))
+        description["links"].append(util.createquerylinks(server + '/collections/' + collection['name'] + "_" + col.replace(
+            " ", "-") + '/latest/area_query_selector', 'self', 'area_query_selector', 'Area query for latest ' + collection['name'] + "_" + col.replace(" ", "-")))
 
         return description
 

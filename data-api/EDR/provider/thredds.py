@@ -154,7 +154,7 @@ class ThreddsProvider(BaseProvider):
     def get_point(self, data, variables, t_data, x_key, y_key, t_key):
 
         pt = copy.deepcopy(self.pt_template)
-        pt = self.set_axis_vals(pt, 'x', float(data[x_key][0])-360.0)
+        pt = self.set_axis_vals(pt, 'x', float(data[x_key][0]))
         pt = self.set_axis_vals(pt, 'y', float(data[y_key][0]))
 
         if t_key is not None:

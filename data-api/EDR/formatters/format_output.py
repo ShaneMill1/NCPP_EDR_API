@@ -1045,7 +1045,7 @@ class FormatOutput(object):
                     "extent": {
                         "horizontal": util.horizontaldef(["longitude","latitude"],["x","y"],collection['extent']['spatial'].split(',')),
                     },
-                    "links": [util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','position','Point query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/area','self','area','Area query for latest ' + collection['title'])]
+                    "links": [util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','position','Point query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position_query_selector','self','position','Point query for latest ' + collection['title']).util.createquerylinks(self.server + '/collections/' + c_id + '/latest/area','self','area','Area query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position','self','area_query_selector','Area query for latest ' + collection['title'])]
 
                     }
         description['parameters'] = {}
@@ -1105,7 +1105,7 @@ class FormatOutput(object):
                     "extent": {
                         "horizontal": util.horizontaldef(["longitude","latitude"],["x","y"],collection['extent']['spatial'].split(',')),
                     },
-"links": [util.createquerylinks(self.server + '/collections/automated_'+model + '_' + cid+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title'])]}
+"links": [util.createquerylinks(self.server + '/collections/automated_'+model + '_' + cid+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + cid + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title'])]}
         description['parameters'] = {}
 
         return description
@@ -1131,7 +1131,7 @@ class FormatOutput(object):
                     "extent": {
                         "horizontal": util.horizontaldef(["longitude","latutude"],["x","y"],collection['extent']['spatial'].split(',')),
                     },
-"links": [util.createquerylinks(self.server + '/collections/'+model+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title'])]}
+"links": [util.createquerylinks(self.server + '/collections/'+model+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + cid + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title'])]}
         description['parameters'] = {}
         return description
 
@@ -1151,7 +1151,7 @@ class FormatOutput(object):
                     "extent": {
                         "horizontal": util.horizontaldef(["longitude","latutude"],["x","y"],collection['extent']['spatial'].split(',')),
                     },
-"links": [util.createquerylinks(self.server + '/collections/'+model+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title'])]}
+"links": [util.createquerylinks(self.server + '/collections/'+model+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + cid + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title'])]}
         description['parameters'] = {}
         return description
 
@@ -1170,7 +1170,7 @@ class FormatOutput(object):
                         "horizontal": util.horizontaldef(["longitude","latutude"],["x","y"],collection['extent']['spatial'].split(',')),
                     "temporal": {'range': col[0]['time']},
                     },
-"links": [util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/area','self','area','Area query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/cube','self','cube','Cube query for ' + collection['title'])]}
+"links": [util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/area','self','area','Area query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/area_query_selector','self','area_query_selector','Area query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/cube','self','cube','Cube query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/cube_query_selector','self','cube_query_selector','Cube query for ' + collection['title'])]}
         description['parameters'] = {}
         for params in col[0]['parameters']:
             description['parameters'][params]={}
@@ -1194,7 +1194,7 @@ class FormatOutput(object):
                         "horizontal": util.horizontaldef(["longitude","latutude"],["x","y"],collection['extent']['spatial'].split(',')),
                     "temporal": {'range': col[0]['time']},
                     },
-"links": [util.createquerylinks(self.server + '/collections/'+name+'/instances/latest/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+name+'/instances/latest/area','self','area','Area query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+name+'/instances/latest/cube','self','cube','Cube query for ' + collection['title'])]}
+"links": [util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + c_id + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/area','self','area','Area query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/area_query_selector','self','area_query_selector','Area query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/cube','self','cube','Cube query for ' + collection['title']),util.createquerylinks(self.server + '/collections/'+cid+'/instances/latest/cube_query_selector','self','cube_query_selector','Cube query for ' + collection['title'])]}
         description['parameters'] = {}
         for params in col[0]['parameters']:
             description['parameters'][params]={}
