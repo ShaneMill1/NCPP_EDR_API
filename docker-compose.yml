@@ -8,14 +8,14 @@ services:
       - "5500:5500"
       - "5510:5510"
     volumes: 
-      - './data/:/data/'
-      - '~/.aws/:/.aws/'
+      - '~/data/:/data/'
+      - '~/.aws/:/home/ec2-user/.aws/'
     restart: always
   ingest:
     build: ingest
     ports:
       - "8787:8787"
     volumes: 
-      - './data/:/data/'
-      - '~/.aws/:/.aws/'
+      - '~/data/:/data/'
+      - '~/.aws/:/home/ec2-user/.aws/'
     restart: always

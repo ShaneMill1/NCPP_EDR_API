@@ -23,14 +23,15 @@ def create_collections(download_grib_location,zarr_output_location):
    ds_concat_dict={}
    ds_dict={}
    col_name_dict={}
+   fs_list=list()
    files=glob.glob(download_grib_location+'/*[!.idx]')
    files.sort(key=os.path.getmtime)
    for idx,f in enumerate(files):
-      convert_to_zarr(f,zarr_output_location,col_name_dict)
+      convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list)
    return
 
 
-def convert_to_zarr(f,zarr_output_location,col_name_dict):
+def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
    chunk_dict={}
    ds_lists=cfgrib.open_datasets(f)
    for idxx,ds in enumerate(ds_lists):
@@ -58,15 +59,17 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict):
             chunk_dict[dim]=64
       for data_var in ds.data_vars:
          ds[data_var]=ds[data_var].chunk(chunks=chunk_dict)
-      if os.path.isdir(zarr_output_location+col_name_dict[col_name_desc]):
+      if col_name_desc in fs_list:
          try:
-            ds.to_zarr(zarr_output_location+col_name_dict[col_name_desc],mode='a',append_dim='valid_time')
+             ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_dict[col_name_desc],client_kwargs={'region_name':'us-east-1'})),mode='a',append_dim='valid_time')
             print(col_name_dict[col_name_desc]+' appended')
          except:
             print('--------WARNING----------'+col_name_dict[col_name_desc]+' FAILED TO EXPORT TO ZARR')
       else:
-         ds.to_zarr(zarr_output_location+col_name_dict[col_name_desc],mode='w')
+          ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_dict[col_name_desc],client_kwargs={'region_name':'us-east-1'})),mode='w')
          print(col_name_dict[col_name_desc]+' written')
+      if col_name_desc not in fs_list:
+         fs_list.append(col_name_desc)
    return
 
 
@@ -81,9 +84,5 @@ if __name__ == "__main__":
    root_dir=args.root_dir
    model_run_time=datetime.today().isoformat().split('T')[0]+'T'+model_run+':00:00'
    download_grib_location=root_dir+'/'+model+'/'+model_run_time
-   zarr_output_location='./zarr/'+model+'/'+model_run_time+'/'
-   zarr_output_location_string='s3://enviroapi-bucket-1/zarr/'+model+'/'+model_run_time+'/'
-   zarr_output_location=fsspec.get_mapper(zarr_output_location_string)                         
-   if os.path.isdir(zarr_output_location):
-      shutil.rmtree(zarr_output_location)
+   zarr_output_location='s3://enviroapi-bucket-1/zarr/'+model+'/'+model_run_time+'/'
    create_collections(download_grib_location,zarr_output_location)
