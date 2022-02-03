@@ -1,4 +1,0 @@
-# Red-blue palette 
-#0000FF
-#FFFFFF
-#FF0000

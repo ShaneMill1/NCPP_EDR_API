@@ -1,6 +1,0 @@
-geolinks
-lxml
-OWSLib
-pyproj
-Shapely
-xmltodict
