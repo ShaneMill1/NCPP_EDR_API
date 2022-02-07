@@ -523,8 +523,7 @@ class FormatOutput(object):
         zarr_open=data_location+'/gfs_100/'+instance+'/'+zarr_object_name
         collection_ds=xr.open_zarr(zarr_open)
         for idx,p in enumerate(collection_ds.data_vars):
-           time_iso=[]
-           if 'valid_time' in collection_ds.dims:
+           if 'valid_time' in collection_ds.coords:
               f_key='valid_time'
            else:
               f_key=None
@@ -535,23 +534,27 @@ class FormatOutput(object):
               'observed-property': {'label': {'en':  collection_ds[p].units}},
               'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
            if f_key:
+              time_values=collection_ds.valid_time.values.astype(str).tolist()
+              if isinstance(time_values,str):
+                 time_values=[time_values]
               output['parameters'].update({p: {\
               'description': {'en': collection_ds[p].GRIB_name},
               'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
               'observed-property': {'label': {'en':  collection_ds[p].units}}, 
-              'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': collection_ds.valid_time.values.tolist()},'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
-              dims='\t'.join(collection.keys())      
+              'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},
+              'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
+              dims='\t'.join(collection_ds.keys())      
               for l in collection_ds.coords:
-                 if 'time' not in l and 'latitude' not in l and 'longitude' not in l and 'step' not in l:
+                 if l==collection_ds[p].GRIB_typeOfLevel:
                     level=l
                     c_list=list()
-                    c_list=collection_ds[l].values 
+                    c_list=collection_ds[l].values.tolist() 
                     try:
                        output['parameters'].update({p: {\
                        'description': {'en': collection_ds[p].GRIB_name},
                        'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
                        'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
-                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': collection_ds.valid_time.values.tolist()},'horizontal':\
+                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
                        {'name': ['longitude','latitude'],\
                        'coordinates': ['x','y'],'geographic': "BBOX[]",'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}}})
                     except:
@@ -559,7 +562,7 @@ class FormatOutput(object):
                        'description': {'en': collection_ds[p].GRIB_name},
                        'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
                        'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
-                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_iso},'horizontal':\
+                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
                        {'name': ['longitude','latitude'],\
                        'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
         provider=collname.split('_')[0]+'_'+collname.split('_')[1]
@@ -579,18 +582,15 @@ class FormatOutput(object):
         'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
         level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.tolist()
         level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
+
         level_units=level.units
         if len(level_values)>1:
-           output['instance-axes']['z']={'label': collection_ds[p]['GRIB_typeOfLevel'], 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
+           output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
         else:
             output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
         valid_times=collection_ds.valid_time.values.astype(str)
-        try:
-           valid_times=collection_ds.valid_time.values.astype(str)
-           output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
-        except:
-           valid_times=[collection_ds.valid_time.values.astype(str)]
-           output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
+        valid_times=time_values
+        output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
         return output
 
 

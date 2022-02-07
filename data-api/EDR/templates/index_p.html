@@ -780,7 +780,10 @@ function updateOpacity(opacity_value) {
             return false;
         }
         httpRequest.onreadystatechange = capsContents;
-        httpRequest.open('GET', location.pathname.replace(urlparts[urllen - 1],'').replace(urlparts[urllen - 2]+"//",'')+'?f=application/json');
+        console.log('SHANE URL TEST');
+        var get_request=location.pathname.replace(urlparts[urllen - 1],'').replace(urlparts[urllen - 2]+"//",'').slice(0, -1);
+        console.log(get_request);
+        httpRequest.open('GET', get_request+'?f=application/json');
         httpRequest.send();
         document.getElementById("loading_wheel").style.cssText = "display:inline;left:50%;top:50%;width:35px;height:35px;z-index:10000;position:absolute;";
     }
@@ -902,6 +905,8 @@ function updateOpacity(opacity_value) {
         }
     }
     makeRequest();
+
+
     function getPointQuery() {
         let port = location.port;
         if ( port.length > 0) {
