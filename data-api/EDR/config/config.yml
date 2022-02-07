@@ -132,7 +132,7 @@ datasets:
             output_formats: ['CoverageJSON','GRIB','NetCDF','COGeotiff']
             model: [gfs_100]
             cycle: [00z]
-            data_source: /data/collections
+            data_source: 's3://enviroapi-bucket-1/zarr'
     wwa_active:
         name: wwa_active
         title: Active Watches, Warnings, and Advisories
