@@ -23,7 +23,7 @@ from flask import request as rq
 import dateutil.parser as dp
 from bs4 import BeautifulSoup
 import requests
-
+import s3fs
 
 VERSION = '0.0.1'
 LOGGER = logging.getLogger(__name__)
@@ -616,15 +616,14 @@ class API(object):
                instance.append(self.instance_desc(collection, t_str_v, t_str_v + 'instance of Volcanic Ash Advisories','The '+t_str_v+' instance of the Volcanic Ash Advisories','/collections/'+collection))
         else:
             if 'automated' in collection:
-               instance_model=self.config['datasets'][collection]['provider']['model']
+               instance_model=['gfs_100']
                data_location=self.config['datasets'][collection]['provider']['data_source']
                for m in instance_model:
-                  #this is where the available instance is being generated
-                  instance_cycle=sorted(glob.glob(data_location+'/'+m+'/*'))
+                  fs=s3fs.S3FileSystem()
+                  instance_cycle=fs.glob(data_location+'/'+m+'/*')
                   for c in instance_cycle:
                      c_name=os.path.basename(c)
-                     instance.append(self.instance_desc(collection,c_name,c_name+' values', 'The '+c_name+' values for the automated ' + m + ' collection', "/collections/automated_"+m))
-               print('test')
+                     instance.append(self.instance_desc(collection,c_name,c_name+' values', 'The '+c+' values for the automated ' + m + ' collection', "/collections/automated_"+m))
             else:
                instance.append(self.instance_desc(collection, 'latest', 'Latest values', 'The latest values for the ' + collection + ' collection', "/collections/"+collection))
         return instance

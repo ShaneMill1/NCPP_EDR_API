@@ -24,6 +24,8 @@ from dask.distributed import Client
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
+import s3fs
+
 
 class FormatOutput(object):
     def __init__(self, config,link_path, met_ip=False):
@@ -39,17 +41,6 @@ class FormatOutput(object):
         self.ndfd_config = None
         self.mp_ = MetadataProvider(config)
         self.met_ip = met_ip
-        try:
-           link_path_elements=self.link_path[0].split('/')
-           ds_name=link_path_elements[2].split('_')
-           self.ds_name=ds_name[0]+'_'+ds_name[1]
-           self.automated_ds = config['datasets'][self.ds_name]['provider']['data_source']
-           self.auto_cycle =  link_path_elements[3]
-           model_string=link_path_elements[2].split('_')
-           self.auto_model =  model_string[1]+'_'+model_string[2]
-           self.auto_col_json = self.automated_ds +'/'+self.auto_model+'/'+self.auto_cycle+'/'+self.auto_cycle+'_'+self.auto_model+'_collection.json'
-        except:
-           pass
 
     def get_json(self, input):
         return json.dumps(input)
@@ -255,6 +246,7 @@ class FormatOutput(object):
 
     def collections_description(self, collname, display_links):
         global collection_cache
+        print(collname)
         if collection_cache == None:
             collection_cache = {}
             collection_cache['update'] = (datetime.now() - timedelta(hours=5))
@@ -317,29 +309,6 @@ class FormatOutput(object):
                     collections['collections'].extend(tc.query_catalogue(self.mp_, self.server, collection))
                 except:
                     print ("Thredds server unavailable")
-            elif collection["provider"]["name"] == "ndfd":
-                ndfd = NDFDMetadataProvider(self.server, self.mp_)
-                collections['collections'].extend(ndfd.get_metadata(c, collection))
-            elif collection["provider"]["name"] == "taf" or collection["provider"]["name"] == "vaa" or collection["provider"]["name"] == "tca":
-                description = self.other_metadata(collection, c)
-                description["crs"] = [{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
-                description["polygon-query-options"] = {}
-                description["polygon-query-options"]["interpolation-x"] = ["nearest_neighbour"]
-                description["polygon-query-options"]["interpolation-y"] = ["nearest_neighbour"]
-                description["point-query-options"] = {}
-                description["point-query-options"]["interpolation"] = ["nearest_neighbour"]
-                description["f"] = self.config['datasets'][collection["provider"]["name"]]['provider']['output_formats']
-                collections['collections'].append(description)
-            elif "nbm" in collection["provider"]["name"]:
-                description = self.other_metadata(collection, c)
-                description["crs"] = [""]
-                description["polygon-query-options"] = {}
-                description["polygon-query-options"]["interpolation-x"] = ["nearest_neighbour"]
-                description["polygon-query-options"]["interpolation-y"] = ["nearest_neighbour"]
-                description["point-query-options"] = {}
-                description["point-query-options"]["interpolation"] = ["nearest_neighbour"]
-                description["f"] = ["json"]
-                collections['collections'].append(description)
             elif "metar_tgftp" in collection["provider"]["name"]:
                 description = self.other_metadata(collection, c)
                 description["crs"] = [{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
@@ -348,36 +317,6 @@ class FormatOutput(object):
             elif collection['provider']['name']=='wifs_png' or collection['provider']['name']=='national_water_model':
                 description = self.other_metadata(collection, c)
                 description["f"] = self.config['datasets'][collection["name"]]['provider']['output_formats']
-                collections['collections'].append(description)
-            elif "ndfd_xml" in  collection["provider"]["name"]:
-                try:
-                   col_json=self.config['datasets']['ndfd_xml']['provider']['data_source']+'/ndfd_xml/conus/latest/latest_ndfd_collection.json'
-                   with open(col_json, 'r') as col_json:
-                      col=json.load(col_json)
-                except:
-                   col_json=self.config['datasets']['ndfd_xml']['provider']['data_source']+'/ndfd_xml/alaska/latest/latest_ndfd_collection.json'
-                   with open(col_json, 'r') as col_json:
-                      col=json.load(col_json)
-
-                description = self.other_metadata(collection, c)
-                description["crs"] = [{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
-                description["polygon-query-options"] = {}
-                description["polygon-query-options"]["interpolation-x"] = ["nearest_neighbour"]
-                description["polygon-query-options"]["interpolation-y"] = ["nearest_neighbour"]
-                description["point-query-options"] = {}
-                description["point-query-options"]["interpolation"] = ["nearest_neighbour"]
-                description["f"] = self.config['datasets'][collection["provider"]["name"]]['provider']['output_formats']
-                description['parameters']={}
-                for p in col[0]['parameters']:
-                   description['parameters'][p]={}
-                   description['parameters'][p]['description']={'en':p}
-                   description['parameters'][p]['observed-property']={}
-                   description['parameters'][p]['observed-property']['label']={'en':p}
-                   description['parameters'][p]['extent']={}
-                   description['parameters'][p]['extent']['temporal']={}
-                   description['parameters'][p]['extent']['temporal']['name']=[p]
-                   description['parameters'][p]['extent']['temporal']['coordinates']=[p]
-                   description['parameters'][p]['extent']['temporal']['range']=col[0]['forecast_time']
                 collections['collections'].append(description)
             elif "rtma_xml" in  collection["provider"]["name"]:
                 col_json=self.config['datasets']['rtma_xml']['provider']['data_source']+'/rtma_xml/latest/latest_rtma_collection.json'
@@ -503,14 +442,18 @@ class FormatOutput(object):
      
     def automated(self, output, display_links):
         collection_detail = {}
-        col_json=self.auto_col_json
-        zarr_store=self.automated_ds+'/'+self.auto_model+'/'+self.auto_cycle+'/zarr/*'
         col_ids=[]
         link_list=[]
-        for c in sorted(glob.iglob(zarr_store)):
+        fs=s3fs.S3FileSystem()
+        data_location=self.config['datasets']['automated_gfs']['provider']['data_source']
+        cycles=fs.glob(data_location+'/gfs_100/*')
+        for c in sorted(cycles):
+           z_objects=fs.glob('s3://'+c+'/*')
            c_short=os.path.basename(c)
-           col_ids.append(c_short)
-           link_list.append("/collections/automated_"+c_short+"/instances/"+self.auto_cycle)
+           for z in z_objects:
+              z_short=os.path.basename(z)
+              col_ids.append(z_short)
+              link_list.append("/collections/automated_"+z_short+"/instances/"+c_short)
         link_template_list=[]
         for l in link_list:
             link_template_list.append(self.link_template( [], l))
@@ -542,18 +485,19 @@ class FormatOutput(object):
 
     def automated_collection_desc(self, collname, display_links):
         output={}
+        auto_cycle=rq.url.split('/')[-1].split('?')[0]
         cid="_".join(collname.split("_", 2)[1:])
-        point='/collections/'+collname+'/instances/'+self.auto_cycle+'/position'
+        point='/collections/'+collname+'/instances/'+auto_cycle+'/position'
         point_query_selector=point+'_query_selector'
-        polygon='/collections/'+collname+'/instances/'+self.auto_cycle+'/area'
+        polygon='/collections/'+collname+'/instances/'+auto_cycle+'/area'
         polygon_query_selector=polygon+'_query_selector'
-        cube='/collections/'+collname+'/instances/'+self.auto_cycle+'/cube'
+        cube='/collections/'+collname+'/instances/'+auto_cycle+'/cube'
         cube_query_selector=cube+'_query_selector'
-        trajectory='/collections/'+collname+'/instances/'+self.auto_cycle+'/trajectory'
+        trajectory='/collections/'+collname+'/instances/'+auto_cycle+'/trajectory'
         trajectory_query_selector=trajectory+'_query_selector'
-        corridor='/collections/'+collname+'/instances/'+self.auto_cycle+'/corridor'
+        corridor='/collections/'+collname+'/instances/'+auto_cycle+'/corridor'
         corridor_query_selector=corridor+'_query_selector'
-        orig=self.link_template( [], '/collections/'+collname+'/instances/'+self.auto_cycle)
+        orig=self.link_template( [], '/collections/'+collname+'/instances/'+auto_cycle)
         point=self.link_template_point( [], point)
         polygon=self.link_template_polygon( [], polygon)
         cube=self.link_template_cube( [], cube)
@@ -568,81 +512,56 @@ class FormatOutput(object):
         output['links']=link_list
         output['collections']=collname
         output['title']=collname
-        with open(self.auto_col_json, 'r') as col_json:
-           col=json.load(col_json)
-        for idx,c in enumerate(col):
-           if col[idx]['collection_name'].lower()==cid.lower():
-              collection=c
-        f_key=''
-        for c in collection['dimensions']:
-           if 'forecast_time' in c:
-              f_key=c
         output['parameters']={}
-        for idx,p in enumerate(collection['parameters']):
+        #open zarr here
+        #collname is collection name
+        #data_location is 's3://enviroapi-bucket-1/zarr'
+        fs=s3fs.S3FileSystem()
+        data_location=self.config['datasets']['automated_gfs']['provider']['data_source']
+        instance=rq.url.split('/')[-1].split('?')[0]
+        zarr_object_name=rq.url.split('/')[-3].replace('automated_','')
+        zarr_open=data_location+'/gfs_100/'+instance+'/'+zarr_object_name
+        collection_ds=xr.open_zarr(zarr_open)
+        for idx,p in enumerate(collection_ds.data_vars):
            time_iso=[]
+           if 'valid_time' in collection_ds.dims:
+              f_key='valid_time'
+           else:
+              f_key=None
            if not f_key:
               output['parameters'].update({p: {\
-              'description': {'en': collection['long_name'][idx]},
+              'description': {'en': collection_ds[p].GRIB_name},
               'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-              'observed-property': {'label': {'en':  collection['long_name'][idx]}},
-              'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': "BBOX[-180.0,-89.9,180.0,89.9]"}}}})
+              'observed-property': {'label': {'en':  collection_ds[p].units}},
+              'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
            if f_key:
-              for t in collection[f_key]:
-                 t=t.replace("'",'')
-                 time_iso.append(t)
               output['parameters'].update({p: {\
-              'description': {'en': collection['long_name'][idx]},
+              'description': {'en': collection_ds[p].GRIB_name},
               'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-              'observed-property': {'label': {'en':  collection['long_name'][idx]}}, 
-              'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_iso},'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': "BBOX[-180.0,-89.9,180.0,89.9]"}}}})
+              'observed-property': {'label': {'en':  collection_ds[p].units}}, 
+              'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': collection_ds.valid_time.values.tolist()},'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
               dims='\t'.join(collection.keys())      
-              for l in collection['dimensions']:
-                 if 'lv' in l or 'lv_' in dims:
-                    if 'specified' in collection['collection_name'] and 'lv_' not in collection['collection_name']:
-                       zarr_store=self.automated_ds+'/'+self.auto_model+'/'+self.auto_cycle+'/zarr/'
-                       level_ds=xr.open_zarr(zarr_store+collection['collection_name'])
-                       for l_coord in level_ds[p].coords:
-                          if 'lv_' in l_coord:
-                             level=l_coord
-                    else:
-                       if 'lv' in l:
-                          level=l
-                       if 'lv_' in dims:
-                          for cl in collection.keys():
-                             if 'lv_' in cl:
-                                level=cl
+              for l in collection_ds.coords:
+                 if 'time' not in l and 'latitude' not in l and 'longitude' not in l and 'step' not in l:
+                    level=l
                     c_list=list()
-                    
-                    for c in collection[level]:
-                       #if 'e' in c:
-                       #   z_array=c.split('e')
-                       #   d=float(z_array[0])*10**int(z_array[1])
-                       #   c_list.append(d)
-                       if "'" in c:
-                          d=c.replace("'","")
-                          c_list.append(d)
-                       else:
-                          c_list.append(c)
+                    c_list=collection_ds[l].values 
                     try:
                        output['parameters'].update({p: {\
-                       'description': {'en': collection['long_name'][idx]},
+                       'description': {'en': collection_ds[p].GRIB_name},
                        'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-                       'observed-property': {'label': {'en':  collection['long_name'][idx]}},
-                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_iso},'horizontal':\
+                       'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
+                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': collection_ds.valid_time.values.tolist()},'horizontal':\
                        {'name': ['longitude','latitude'],\
-                       'coordinates': ['x','y'],'geographic': "BBOX["+collection['lon_0'][0]+','+collection['lat_0']\
-                       [len(collection['lat_0'])-1]+','+collection['lon_0'][len(collection['lon_0'])-1]+','+\
-                       collection['lat_0'][0]+"]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                       'coordinates': ['x','y'],'geographic': "BBOX[]",'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}}})
                     except:
                        output['parameters'].update({p: {\
-                       'description': {'en': collection['long_name'][idx]},
+                       'description': {'en': collection_ds[p].GRIB_name},
                        'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-                       'observed-property': {'label': {'en':  collection['long_name'][idx]}},
+                       'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
                        'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_iso},'horizontal':\
                        {'name': ['longitude','latitude'],\
-                       'coordinates': ['x','y'],'geographic': "BBOX["+collection['xgrid_0'][0]+','+collection['ygrid_0']\
-                       [len(collection['ygrid_0'])-1]+','+collection['xgrid_0'][len(collection['xgrid_0'])-1]+','+\
-                       collection['ygrid_0'][0]+"]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                       'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
         provider=collname.split('_')[0]+'_'+collname.split('_')[1]
         output['f']=self.config['datasets'][provider]['provider']['output_formats']
         output['crs']=[{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
@@ -654,25 +573,24 @@ class FormatOutput(object):
         output['id']=collname
         #populate instance axes
         output['instance-axes']={}
-        for e in output['parameters'][p]['extent']:
-           if e == 'horizontal':
-              for d in collection.keys():
-                 if 'lon' in d and 'long_name' != d:
-                    xkey=d
-                 if 'xgrid' in d:
-                    xkey=d
-                 if 'lat' in d:
-                    ykey=d
-                 if 'ygrid' in d:
-                    ykey=d
-              output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection[xkey][0],\
-              'upper-bound': collection[xkey][len(collection[xkey])-1], 'uom-label': "degrees"}
-              output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection[ykey][len(collection[ykey])-1],\
-              'upper-bound': collection[ykey][0], 'uom-label': "degrees"}           
-           if e == 'vertical':
-              output['instance-axes']['z']={'label': level, 'lowerBound': collection[level][0], 'upper-bound': collection[l][len(collection[level])-1], 'uom-label': level}
-           if e == 'temporal':
-              output['instance-axes']['t']={'label': 'Time', 'lower-bound': time_iso[0], 'upper-bound': time_iso[len(time_iso)-1], 'uom-label': "ISO8601"}
+        output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection_ds[p].GRIB_longitudeOfFirstGridPointInDegrees,\
+        'upper-bound': collection_ds[p].GRIB_longitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}
+        output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].GRIB_latitudeOfFirstGridPointInDegrees,\
+        'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
+        level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.tolist()
+        level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
+        level_units=level.units
+        if len(level_values)>1:
+           output['instance-axes']['z']={'label': collection_ds[p]['GRIB_typeOfLevel'], 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
+        else:
+            output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
+        valid_times=collection_ds.valid_time.values.astype(str)
+        try:
+           valid_times=collection_ds.valid_time.values.astype(str)
+           output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
+        except:
+           valid_times=[collection_ds.valid_time.values.astype(str)]
+           output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
         return output
 
 
@@ -1091,14 +1009,8 @@ class FormatOutput(object):
 
 
     def get_automated_metadata(self, collection, cid):
-        #with open(self.auto_col_json, 'r') as col_json:
-        #  col=json.load(col_json)
-        #instance_id = self.auto_cycle
-        #model=self.auto_model
-        #cycle=self.auto_cycle
-        
         model=collection['provider']['model'][0]
-        cycle=collection['provider']['cycle'][0]
+        cycle=rq.url.split('/')[-1].split('?')[0]
         description = {"id": cid,
                     "title": self.datasets[cid]['title'],
                     "description": collection['description'],
@@ -1107,55 +1019,8 @@ class FormatOutput(object):
                     },
 "links": [util.createquerylinks(self.server + '/collections/automated_'+model + '_' + cid+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + cid + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title'])]}
         description['parameters'] = {}
-
         return description
  
-    def get_ndfdxml_metadata(self, collection, cid):
-        try:
-           col_json=self.config['datasets']['ndfd_xml']['provider']['data_source']+'/ndfd_xml/conus/latest/latest_ndfd_collection.json'
-           with open(col_json, 'r') as col_json:
-              col=json.load(col_json)
-        except:
-            col_json=self.config['datasets']['ndfd_xml']['provider']['data_source']+'/ndfd_xml/alaska/latest/latest_ndfd_collection.json'
-            with open(col_json, 'r') as col_json:
-               col=json.load(col_json)
-        instance_id = 'latest'
-        model=col[0]['collection_name']
-        cycle='latest'
-
-        model=collection['provider']['model'][0]
-        cycle=collection['provider']['cycle'][0]
-        description = {"id": cid,
-                    "title": self.datasets[cid]['title'],
-                    "description": collection['description'],
-                    "extent": {
-                        "horizontal": util.horizontaldef(["longitude","latutude"],["x","y"],collection['extent']['spatial'].split(',')),
-                    },
-"links": [util.createquerylinks(self.server + '/collections/'+model+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + cid + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title'])]}
-        description['parameters'] = {}
-        return description
-
-    def get_rtmaxml_metadata(self, collection, cid):
-        col_json=self.config['datasets']['rtma_xml']['provider']['data_source']+'/rtma_xml/latest/latest_rtma_collection.json'
-        with open(col_json, 'r') as col_json:
-          col=json.load(col_json)
-        instance_id = 'latest'
-        model=col[0]['collection_name']
-        cycle='latest'
-
-        model=collection['provider']['model'][0]
-        cycle=collection['provider']['cycle'][0]
-        description = {"id": cid,
-                    "title": self.datasets[cid]['title'],
-                    "description": collection['description'],
-                    "extent": {
-                        "horizontal": util.horizontaldef(["longitude","latutude"],["x","y"],collection['extent']['spatial'].split(',')),
-                    },
-"links": [util.createquerylinks(self.server + '/collections/'+model+'/instances/'+cycle+'/position','self','position','Point query for ' + collection['title']),util.createquerylinks(self.server + '/collections/' + cid + '/latest/position_query_selector','self','position_query_selector','Point query for latest ' + collection['title'])]}
-        description['parameters'] = {}
-        return description
-
-
     def get_himawari_metadata(self, collection, cid):
         data_source=self.config['datasets'][cid]['provider']['data_source']
         name=self.config['datasets'][cid]['name']
