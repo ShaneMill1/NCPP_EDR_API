@@ -27,9 +27,9 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 
 #This is where we turn on/off dask cluster
 #cluster is local, docker is set up in start.sh so only need to connect client to 0.0.0.0:5500
-cluster = LocalCluster(dashboard_address=':5610',scheduler_port=5600)
-client = Client(cluster)
-#client = Client('0.0.0.0:5500')
+#cluster = LocalCluster(dashboard_address=':5610',scheduler_port=5600)
+#client = Client(cluster)
+client = Client('0.0.0.0:5500')
 
 with open(os.environ.get('EDR_CONFIG')) as fh:
    CONFIG = yaml.safe_load(fh)

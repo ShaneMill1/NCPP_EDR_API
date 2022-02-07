@@ -548,7 +548,7 @@ class FormatOutput(object):
                  if l==collection_ds[p].GRIB_typeOfLevel:
                     level=l
                     c_list=list()
-                    c_list=collection_ds[l].values.tolist() 
+                    c_list=collection_ds[l].values.astype(str).tolist() 
                     try:
                        output['parameters'].update({p: {\
                        'description': {'en': collection_ds[p].GRIB_name},
@@ -556,7 +556,7 @@ class FormatOutput(object):
                        'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
                        'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
                        {'name': ['longitude','latitude'],\
-                       'coordinates': ['x','y'],'geographic': "BBOX[]",'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}}})
+                       'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
                     except:
                        output['parameters'].update({p: {\
                        'description': {'en': collection_ds[p].GRIB_name},
@@ -580,9 +580,8 @@ class FormatOutput(object):
         'upper-bound': collection_ds[p].GRIB_longitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}
         output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].GRIB_latitudeOfFirstGridPointInDegrees,\
         'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
-        level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.tolist()
+        level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.astype(str).tolist()
         level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
-
         level_units=level.units
         if len(level_values)>1:
            output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
