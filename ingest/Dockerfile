@@ -13,7 +13,7 @@ RUN conda update -n base -c defaults conda
 RUN conda env update --file env.yml 
 
 RUN groupadd ec2-user
-RUN useradd -r -u 1001 -g ec2-user ec2-user
+RUN useradd -r -u 1000 -g ec2-user ec2-user
 RUN mkdir /home/ec2-user
 RUN mkdir /data
 RUN chown -R ec2-user /automated_ingest /data /home/ec2-user /var /tmp
