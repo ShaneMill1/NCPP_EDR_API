@@ -5,14 +5,14 @@ import xarray as xr
 import re
 import cfgrib
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import uuid
 from distributed import Client
 import fsspec
 import s3fs
 import multiprocessing
-
+import shutil
 
 def expand_dims(d):
    d=d.expand_dims('step')
@@ -26,14 +26,20 @@ def create_collections(download_grib_location,zarr_output_location):
    ds_dict={}
    col_name_dict={}
    fs_list=list()
-   files=glob.glob(download_grib_location+'/*[!.idx]')
-   files.sort(key=os.path.getmtime)
+   #files=glob.glob(download_grib_location+'/*[!.idx]')
+   #files.sort(key=os.path.getmtime)
    cpus=multiprocessing.cpu_count()
    max_pool_size=12
    pool=multiprocessing.Pool(cpus if cpus<max_pool_size else max_pool_size)
+   fext=open('combined.grb','wb')
+   WDIR=os.getcwd()
    for idx,f in enumerate(files):
-      #convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list)
-      pool.apply_async(convert_to_zarr,args=(f,zarr_output_location,col_name_dict,fs_list))
+      fo=open(os.path.join(WDIR,f),'rb')
+      shutil.copyfileobj(fo,fext)
+      fo.close()
+   fext.close()
+   convert_to_zarr(fext,zarr_output_location,col_name_dict,fs_list)
+      #pool.apply_async(convert_to_zarr,args=(f,zarr_output_location,col_name_dict,fs_list))
    pool.close()
    pool.join()
    return
@@ -41,20 +47,21 @@ def create_collections(download_grib_location,zarr_output_location):
 
 def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
    chunk_dict={}
+   client=Client()
    ds_lists=cfgrib.open_datasets(f)
    for idxx,ds in enumerate(ds_lists):
       ds=ds.expand_dims('step')
-      for coord in ds.coords:
-         if coord != 'step' and coord != 'latitude' and coord != 'longitude' and coord != 'valid_time' and coord != 'time':
-            lv_coord_vals=ds[coord].values.astype(str).tolist()
-            if isinstance(lv_coord_vals,list):
-               lv_coord_val_string='_'.join(lv_coord_vals)
-            else:
-                lv_coord_val_string=str(float(lv_coord_vals))
-            try:
-               ds=ds.expand_dims(coord)
-            except:
-               pass
+      for dv in ds.data_vars:
+          test_dv=dv
+          break
+      vert_coord=ds[dv].GRIB_typeOfLevel
+      lv_coord_vals=ds[vert_coord].values.astype(str).tolist()
+      if isinstance(lv_coord_vals,list):
+         lv_coord_val_string='_'.join(lv_coord_vals)
+      else:
+         lv_coord_val_string=str(float(lv_coord_vals))
+      if vert_coord not in ds.dims:
+         ds=ds.expand_dims(vert_coord)
       col_name_desc='gfs_100'+'_'+"_".join(list(ds.coords))+'_'+lv_coord_val_string
       if col_name_desc not in col_name_dict.keys():
          col_name_id=str(uuid.uuid4())
@@ -68,68 +75,18 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
          ds[data_var]=ds[data_var].chunk(chunks=chunk_dict)
       if col_name_desc in fs_list:
          try:
-            ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='step')
-            print(col_name_dict[col_name_desc]+' appended')
+            #ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
+            ds.to_zarr('./data/'+col_name_desc,mode='a',append_dim='step')
+            print(col_name_desc+' appended')
          except:
+            import pdb; pdb.set_trace()
             print('--------WARNING----------'+col_name_dict[col_name_desc]+' FAILED TO EXPORT TO ZARR')
       else:
-         ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='w')
+         #ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='w')
+         ds.to_zarr('./data/'+col_name_desc,mode='w')
          print(col_name_desc+' written')
       if col_name_desc not in fs_list:
          fs_list.append(col_name_desc)
-   return
-
-
-def create_meta(file_location,model):
-   collection_list=list()
-   fs=s3fs.S3FileSystem(anon=True)
-   import pdb; pdb.set_trace()
-   for name in fs.glob(zarr_output_location+'/*'):
-      ds=xr.open_zarr(name)
-      col_dict={}
-      col_dict['collection_name']=name.split('/')[-1]
-      dimensions=list(ds.dims.keys())
-      dimension_count=len(dimensions)
-      col_dict['dimension_count']=dimension_count
-      col_dict['dimensions']=dimensions
-      try:
-         col_dict['level_type']=ds[list(ds.data_vars.keys())[0]].level_type.lower().replace(' ','_')
-      except:
-         col_dict['level_type']='' 
-      for dim in dimensions:
-         if 'forecast_time' in dim:
-            ftime_list=list()
-            initial_time=ds[list(ds.data_vars.keys())[0]].initial_time
-            year=initial_time.split(' ')[0].split('/')[2]
-            month=initial_time.split(' ')[0].split('/')[0]
-            day=initial_time.split(' ')[0].split('/')[1]
-            hour=initial_time.split(' ')[1].split(':')[0].replace('(','')
-            initial_dt=datetime(int(year), int(month), int(day), int(hour)).isoformat()
-            initial_dt_np=np.datetime64(initial_dt)
-            for ftime in ds[dim].values:
-               ftime_final=str(initial_dt_np+ftime).split('.')[0]
-               ftime_list.append(ftime_final)
-            col_dict[dim]=ftime_list
-         else:
-            val_list=ds[dim].values.astype(str).tolist()
-            col_dict[dim]=val_list
-      data_var_list=list();long_name_list=list()
-      for data_var in ds.data_vars:
-         data_var_list.append(data_var)
-         try:
-            long_name_list.append(ds[data_var].attrs['long_name'])
-         except:
-            long_name_list.append('')
-      col_dict['parameters']=data_var_list
-      col_dict['long_name']=long_name_list
-      combined_dims = '_'.join(dimensions)
-      #if 'lv_' not in combined_dims:
-      #   level_value='-'.join(map(str,ds[list(ds.data_vars.keys())[0]].level))
-      #   level_type=ds[list(ds.data_vars.keys())[0]].level_type.replace(' ','_').lower()
-      #   col_dict['lv_'+level_type]=[str(level_value)]
-      collection_list.append(col_dict)
-   with open(file_location+'/'+initial_dt+'_'+model+'_collection.json','w') as f:
-      json.dump(collection_list,f,indent=2, sort_keys=True) 
    return
 
 
@@ -146,4 +103,3 @@ if __name__ == "__main__":
    download_grib_location=root_dir+'/'+model+'/'+model_run_time
    zarr_output_location='s3://enviroapi-bucket-1/zarr/'+model+'/'+model_run_time+'/'
    create_collections(download_grib_location,zarr_output_location)
-   #create_meta(zarr_output_location,model)
