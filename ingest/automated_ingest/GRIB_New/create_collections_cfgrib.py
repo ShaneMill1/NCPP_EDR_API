@@ -26,67 +26,83 @@ def create_collections(download_grib_location,zarr_output_location):
    ds_dict={}
    col_name_dict={}
    fs_list=list()
-   #files=glob.glob(download_grib_location+'/*[!.idx]')
-   #files.sort(key=os.path.getmtime)
-   cpus=multiprocessing.cpu_count()
-   max_pool_size=12
-   pool=multiprocessing.Pool(cpus if cpus<max_pool_size else max_pool_size)
-   fext=open('combined.grb','wb')
-   WDIR=os.getcwd()
-   for idx,f in enumerate(files):
-      fo=open(os.path.join(WDIR,f),'rb')
-      shutil.copyfileobj(fo,fext)
-      fo.close()
-   fext.close()
-   convert_to_zarr(fext,zarr_output_location,col_name_dict,fs_list)
-      #pool.apply_async(convert_to_zarr,args=(f,zarr_output_location,col_name_dict,fs_list))
-   pool.close()
-   pool.join()
+   convert_to_zarr(download_grib_location+'/combined.grb',zarr_output_location,col_name_dict,fs_list)
    return
 
 
 def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
-   chunk_dict={}
-   client=Client()
+   client=Client(n_workers=10)
    ds_lists=cfgrib.open_datasets(f)
+   col_name_list=list()
+   f_name_list=list()
    for idxx,ds in enumerate(ds_lists):
-      ds=ds.expand_dims('step')
+      chunk_dict={}
       for dv in ds.data_vars:
           test_dv=dv
           break
+      if 'step' in ds.dims:
+         ds=ds.assign_coords({'step':ds.valid_time})
+         ds=ds.drop('valid_time')
+         ds=ds.rename({'step':'valid_time'})
       vert_coord=ds[dv].GRIB_typeOfLevel
       lv_coord_vals=ds[vert_coord].values.astype(str).tolist()
-      if isinstance(lv_coord_vals,list):
-         lv_coord_val_string='_'.join(lv_coord_vals)
-      else:
-         lv_coord_val_string=str(float(lv_coord_vals))
       if vert_coord not in ds.dims:
          ds=ds.expand_dims(vert_coord)
-      col_name_desc='gfs_100'+'_'+"_".join(list(ds.coords))+'_'+lv_coord_val_string
-      if col_name_desc not in col_name_dict.keys():
-         col_name_id=str(uuid.uuid4())
-         col_name_dict[col_name_desc]=col_name_id
+      coord_list=list()
+      for c in ds.coords:
+         if 'time' not in c and 'step' not in c and c != vert_coord:
+            coord_list.append(c)
+         if 'time' in c:
+            time_coord=c
+            len_vals=ds[c].values.tolist()
+            if isinstance(len_vals,int):
+               len_vals=[len_vals]
+            time_len_val=str(len(len_vals))
+            time_coord=c+time_len_val
+            coord_list.append(time_coord)
+         if c == vert_coord:
+            vert_coord=c
+            len_vals=ds[c].values.tolist()
+            if isinstance(len_vals,int):
+               len_vals=[len_vals]
+            vert_len_val=str(len(len_vals))            
+            vert_coord=c+vert_len_val
+            coord_list.append(vert_coord)
+      col_name_desc='gfs_100'+'_'+"_".join(coord_list)
+      if col_name_desc not in col_name_list:
+         col_name_list.append(col_name_desc)
       for dim in ds.dims:
          if 'latitude' in dim:
-            chunk_dict[dim]=64
+            chunk_dict[dim]=128
          if 'longitude' in dim:
-            chunk_dict[dim]=64
+            chunk_dict[dim]=128
+         if vert_coord in dim:
+            if int(vert_lev_val)>3:
+               chunk_val=int(float(int(vert_lev_val)/3))
+            chunk_dict[dim]=chunk_val
+         if 'valid_time' in dim:
+            if int(time_len_val)>3:
+               chunk_val=int(float(int(time_len_val)/3))
+            chunk_dict[dim]=chunk_val            
       for data_var in ds.data_vars:
          ds[data_var]=ds[data_var].chunk(chunks=chunk_dict)
-      if col_name_desc in fs_list:
+      if col_name_desc in f_name_list:
          try:
             #ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
-            ds.to_zarr('./data/'+col_name_desc,mode='a',append_dim='step')
+            ds.to_zarr('./data/'+col_name_desc,mode='a',append_dim='valid_time')
             print(col_name_desc+' appended')
          except:
-            import pdb; pdb.set_trace()
-            print('--------WARNING----------'+col_name_dict[col_name_desc]+' FAILED TO EXPORT TO ZARR')
+            try:
+               col_name_desc=col_name_desc+'_alt'
+               col_name_list.append(col_name_desc) 
+               ds.to_zarr('./data/'+col_name_desc,mode='w')
+            except:
+               print('--------WARNING----------'+col_name_desc+' FAILED TO EXPORT TO ZARR')
       else:
          #ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='w')
          ds.to_zarr('./data/'+col_name_desc,mode='w')
          print(col_name_desc+' written')
-      if col_name_desc not in fs_list:
-         fs_list.append(col_name_desc)
+      f_name_list.append(col_name_desc)
    return
 
 

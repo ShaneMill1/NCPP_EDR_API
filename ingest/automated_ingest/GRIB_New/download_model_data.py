@@ -1,36 +1,40 @@
 #!/opt/conda/envs/env/bin/python
-
 import argparse
 import os
 from multiprocessing import Pool
 from datetime import date
 from datetime import datetime,timedelta
 import shutil
-
+import glob
 
 def sys_request(i):
-   #try:
    today=date.today()
    today=today.strftime("%Y%m%d")
    d=today+model_run
-   rq='perl get.pl data '+d+' ' +str(i)+' '+str(i)+' '+str(i)+' all all '+ file_location+' '+ model
+   rq='perl get.pl data '+d+' ' +str(i)+' '+str(i)+' '+str(i)+' all all '+ file_location+'/data_download'+' '+ model
    os.system(rq)
-   #except: 
-   #   pass
    return
 
 
 
 def multi_process_loop(model,model_run,file_location):
    hour_list=list()
+   os.makedirs(file_location+'/data_download')
    for i in range(0, 387,3):
-      #hour_list.append(i)
       sys_request(i)
-   #pool=Pool()
-   #pool.map(sys_request,hour_list)
    return
 
 
+def combine_grib(model,model_run,file_location):
+   files=glob.glob(file_location+'/data_download/*[!.idx]')
+   os.makedirs(file_location+'/combined_data')
+   with open(file_location+'/combined_data/combined.grb', 'wb') as outfile:
+      for filename in files:
+          with open(filename, 'rb') as readfile:
+              shutil.copyfileobj(readfile, outfile)
+   shutil.rmtree(file_location+'/data_download')
+   return
+    
 
 
 if __name__ == "__main__":
@@ -52,3 +56,4 @@ if __name__ == "__main__":
    os.makedirs(file_location)
    file_location=root_dir+'/'+model+'/'+today+'/'
    multi_process_loop(model,model_run,file_location)
+   combine_grib(model,model_run,file_location)
