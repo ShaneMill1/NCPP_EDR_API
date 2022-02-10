@@ -26,7 +26,7 @@ def create_collections(download_grib_location,zarr_output_location):
    ds_dict={}
    col_name_dict={}
    fs_list=list()
-   convert_to_zarr(download_grib_location+'/combined.grb',zarr_output_location,col_name_dict,fs_list)
+   convert_to_zarr(download_grib_location+'/combined/combined.grb',zarr_output_location,col_name_dict,fs_list)
    return
 
 
