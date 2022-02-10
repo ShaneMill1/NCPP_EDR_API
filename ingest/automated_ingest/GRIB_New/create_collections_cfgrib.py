@@ -88,19 +88,18 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
          ds[data_var]=ds[data_var].chunk(chunks=chunk_dict)
       if col_name_desc in f_name_list:
          try:
-            #ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
-            ds.to_zarr('./data/'+col_name_desc,mode='a',append_dim='valid_time')
+            ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
             print(col_name_desc+' appended')
          except:
             try:
                col_name_desc=col_name_desc+'_alt'
                col_name_list.append(col_name_desc) 
+               ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
                ds.to_zarr('./data/'+col_name_desc,mode='w')
             except:
                print('--------WARNING----------'+col_name_desc+' FAILED TO EXPORT TO ZARR')
       else:
-         #ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='w')
-         ds.to_zarr('./data/'+col_name_desc,mode='w')
+         ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='w')
          print(col_name_desc+' written')
       f_name_list.append(col_name_desc)
    return

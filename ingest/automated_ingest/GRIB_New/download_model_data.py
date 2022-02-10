@@ -26,13 +26,16 @@ def multi_process_loop(model,model_run,file_location):
 
 
 def combine_grib(model,model_run,file_location):
+   print('combining grib files')
    files=glob.glob(file_location+'/data_download/*[!.idx]')
    os.makedirs(file_location+'/combined_data')
    with open(file_location+'/combined_data/combined.grb', 'wb') as outfile:
       for filename in files:
           with open(filename, 'rb') as readfile:
               shutil.copyfileobj(readfile, outfile)
+   print('removing downloaded grib files')
    shutil.rmtree(file_location+'/data_download')
+   print('concat complete, ready to convert grib to zarr')
    return
     
 
