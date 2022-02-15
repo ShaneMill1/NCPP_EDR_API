@@ -6,22 +6,35 @@ from datetime import date
 from datetime import datetime,timedelta
 import shutil
 import glob
+import requests
+from bs4 import BeautifulSoup
+import urllib
+
+
 
 def sys_request(i):
-   today=date.today()
-   today=today.strftime("%Y%m%d")
-   d=today+model_run
-   rq='perl get.pl data '+d+' ' +str(i)+' '+str(i)+' '+str(i)+' all all '+ file_location+'/data_download'+' '+ model
-   os.system(rq)
+   file_name=i.split('/')[-1]
+   urllib.request.urlretrieve(i,file_location+'/data_download/'+file_name)
+   print(file_name + ' downloaded')
    return
-
 
 
 def multi_process_loop(model,model_run,file_location):
    hour_list=list()
    os.makedirs(file_location+'/data_download')
-   for i in range(0, 387,3):
-      sys_request(i)
+   this_day=date.today().isoformat().replace('-','')
+   url='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/gfs.'+this_day+'/'+model_run+'/atmos/'
+   file_list=[]
+   rq=requests.get(url)
+   html=rq.text
+   soup=BeautifulSoup(html,'html.parser')
+   for hr in soup.find_all('a'):
+      file_text=hr.text
+      if 'gfs.t00z.pgrb2b.1p00' in hr.text and '.idx' not in hr.text:
+         url_get=url+hr.text
+         file_list.append(url_get)
+   pool=Pool()
+   pool.map(sys_request,file_list)
    return
 
 

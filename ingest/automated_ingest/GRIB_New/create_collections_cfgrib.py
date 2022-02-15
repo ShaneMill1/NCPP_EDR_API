@@ -65,7 +65,10 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
             len_vals=ds[c].values.tolist()
             if isinstance(len_vals,int):
                len_vals=[len_vals]
-            vert_len_val=str(len(len_vals))            
+            if len(len_vals)==1:
+               vert_len_val='lv_'+str(float(len_vals[0])
+            else:
+               vert_len_val='lvs_'+str(len(len_vals))
             vert_coord=c+vert_len_val
             coord_list.append(vert_coord)
       col_name_desc='gfs_100'+'_'+"_".join(coord_list)
@@ -91,13 +94,7 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
             ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
             print(col_name_desc+' appended')
          except:
-            try:
-               col_name_desc=col_name_desc+'_alt'
-               col_name_list.append(col_name_desc) 
-               ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='a',append_dim='valid_time')
-               ds.to_zarr('./data/'+col_name_desc,mode='w')
-            except:
-               print('--------WARNING----------'+col_name_desc+' FAILED TO EXPORT TO ZARR')
+            print('--------WARNING----------'+col_name_desc+' FAILED TO EXPORT TO ZARR')
       else:
          ds.to_zarr(fsspec.get_mapper(zarr_output_location+col_name_desc,client_kwargs={'region_name':'us-east-1'}),mode='w')
          print(col_name_desc+' written')
