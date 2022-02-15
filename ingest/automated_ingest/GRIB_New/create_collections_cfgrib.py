@@ -66,7 +66,7 @@ def convert_to_zarr(f,zarr_output_location,col_name_dict,fs_list):
             if isinstance(len_vals,int):
                len_vals=[len_vals]
             if len(len_vals)==1:
-               vert_len_val='lv_'+str(float(len_vals[0])
+               vert_len_val='lv_'+str(float(len_vals[0]))
             else:
                vert_len_val='lvs_'+str(len(len_vals))
             vert_coord=c+vert_len_val
