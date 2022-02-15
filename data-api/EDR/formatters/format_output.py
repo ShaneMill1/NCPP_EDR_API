@@ -523,73 +523,74 @@ class FormatOutput(object):
         zarr_open=data_location+'/gfs_100/'+instance+'/'+zarr_object_name
         collection_ds=xr.open_zarr(zarr_open)
         for idx,p in enumerate(collection_ds.data_vars):
-           if 'valid_time' in collection_ds.coords:
-              f_key='valid_time'
-           else:
-              f_key=None
-           if not f_key:
-              output['parameters'].update({p: {\
-              'description': {'en': collection_ds[p].GRIB_name},
-              'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-              'observed-property': {'label': {'en':  collection_ds[p].units}},
-              'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
-           if f_key:
-              time_values=collection_ds.valid_time.values.astype(str).tolist()
-              if isinstance(time_values,str):
-                 time_values=[time_values]
-              output['parameters'].update({p: {\
-              'description': {'en': collection_ds[p].GRIB_name},
-              'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-              'observed-property': {'label': {'en':  collection_ds[p].units}}, 
-              'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},
-              'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
-              dims='\t'.join(collection_ds.keys())      
-              for l in collection_ds.coords:
-                 if l==collection_ds[p].GRIB_typeOfLevel:
-                    level=l
-                    c_list=list()
-                    c_list=collection_ds[l].values.astype(str).tolist() 
-                    try:
-                       output['parameters'].update({p: {\
-                       'description': {'en': collection_ds[p].GRIB_name},
-                       'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-                       'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
-                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
-                       {'name': ['longitude','latitude'],\
-                       'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
-                    except:
-                       output['parameters'].update({p: {\
-                       'description': {'en': collection_ds[p].GRIB_name},
-                       'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-                       'observed-property': {'label': {'en':  collection_ds[p].GRIB_name}},
-                       'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
-                       {'name': ['longitude','latitude'],\
-                       'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
-        provider=collname.split('_')[0]+'_'+collname.split('_')[1]
-        output['f']=self.config['datasets'][provider]['provider']['output_formats']
-        output['crs']=[{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
-        output['point-query-options']={}
-        output['point-query-options']['interpolation']=['nearest_neighbor']
-        output['polygon-query-options']={}
-        output['polygon-query-options']['interpolation-x']=['nearest_neighbor']
-        output['polygon-query-options']['interpolation-y']=['nearest_neighbor']
-        output['id']=collname
-        #populate instance axes
-        output['instance-axes']={}
-        output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection_ds[p].GRIB_longitudeOfFirstGridPointInDegrees,\
-        'upper-bound': collection_ds[p].GRIB_longitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}
-        output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].GRIB_latitudeOfFirstGridPointInDegrees,\
-        'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
-        level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.astype(str).tolist()
-        level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
-        level_units=level.units
-        if len(level_values)>1:
-           output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
-        else:
-            output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
-        valid_times=collection_ds.valid_time.values.astype(str)
-        valid_times=time_values
-        output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
+           if p!='time':
+              if 'valid_time' in collection_ds.coords:
+                 f_key='valid_time'
+              else:
+                 f_key=None
+              if not f_key:
+                 output['parameters'].update({p: {\
+                 'description': {'en': collection_ds[p].GRIB_shortName},
+                 'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                 'observed-property': {'label': {'en':  collection_ds[p].units}},
+                 'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
+              if f_key:
+                 grib_name=collection_ds[p].GRIB_shortName
+                 time_values=collection_ds.valid_time.values.astype(str).tolist()
+                 if isinstance(time_values,str):
+                    time_values=[time_values]
+                 output['parameters'].update({p: {\
+                 'description': {'en': collection_ds[p].GRIB_shortName},
+                 'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                 'observed-property': {'label': {'en':  collection_ds[p].units}}, 
+                 'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},
+                 'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
+                 dims='\t'.join(collection_ds.keys())      
+                 for l in collection_ds.coords:
+                    if l==collection_ds[p].GRIB_typeOfLevel:
+                       level=l
+                       c_list=list()
+                       c_list=collection_ds[l].values.astype(str).tolist() 
+                       try:
+                          output['parameters'].update({p: {\
+                          'description': {'en': collection_ds[p].GRIB_shortName},
+                          'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                          'observed-property': {'label': {'en':  collection_ds[p].GRIB_shortName}},
+                          'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
+                          {'name': ['longitude','latitude'],\
+                          'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                       except:
+                          output['parameters'].update({p: {\
+                          'description': {'en': collection_ds[p].GRIB_shortName},
+                          'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                          'observed-property': {'label': {'en':  collection_ds[p].GRIB_shortName}},
+                          'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
+                          {'name': ['longitude','latitude'],\
+                          'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+              provider=collname.split('_')[0]+'_'+collname.split('_')[1]
+              output['f']=self.config['datasets'][provider]['provider']['output_formats']
+              output['crs']=[{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
+              output['point-query-options']={}
+              output['point-query-options']['interpolation']=['nearest_neighbor']
+              output['polygon-query-options']={}
+              output['polygon-query-options']['interpolation-x']=['nearest_neighbor']
+              output['polygon-query-options']['interpolation-y']=['nearest_neighbor']
+              output['id']=collname
+              output['instance-axes']={}
+              output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection_ds[p].GRIB_longitudeOfFirstGridPointInDegrees,\
+              'upper-bound': collection_ds[p].GRIB_longitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}
+              output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].GRIB_latitudeOfFirstGridPointInDegrees,\
+              'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
+              level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.astype(str).tolist()
+              level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
+              level_units=level.units
+              if len(level_values)>1:
+                 output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
+              else:
+                 output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
+              valid_times=collection_ds.valid_time.values.astype(str)
+              valid_times=time_values
+              output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
         return output
 
 

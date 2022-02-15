@@ -169,16 +169,16 @@ def api():
 @app.route('/collections/<collection>/instances/<identifier>', strict_slashes=False)
 def get_automated_collection_details(collection, identifier):
     collection_type=collection.split('_')
-    try:
-       if len(collection_type) > 3:
-          headers, status_code, content = api_.describe_automated_collections(request.headers, request.args, collection, identifier)
-          response = make_response(content, status_code)
-       else:
-          headers, status_code, content = api_.describe_collection(request.headers, request.args, collection, identifier)
-          response = make_response(content, status_code)
-    except:
+    #try:
+    if len(collection_type) > 3:
+       headers, status_code, content = api_.describe_automated_collections(request.headers, request.args, collection, identifier)
+       response = make_response(content, status_code)
+    else:
        headers, status_code, content = api_.describe_collection(request.headers, request.args, collection, identifier)
        response = make_response(content, status_code)
+    #except:
+    #   headers, status_code, content = api_.describe_collection(request.headers, request.args, collection, identifier)
+    #   response = make_response(content, status_code)
 
 
     if headers:
