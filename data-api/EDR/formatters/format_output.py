@@ -20,7 +20,6 @@ from flask import request as rq
 import sqlite3
 import xarray as xr
 import fsspec
-from dask.distributed import Client
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests

@@ -17,7 +17,7 @@ from EDR.formatters.format_output import FormatOutput
 from EDR.util import style_html
 from flask_cors import CORS
 from jinja2 import Environment, FileSystemLoader
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client
 from dask_jobqueue import SLURMCluster
 
 app = Flask(__name__, static_url_path='/static')

@@ -22,7 +22,6 @@ import urllib.request, json
 import uuid as ud
 import re
 import subprocess
-from distributed import Client
 
 class NDFDXmlProvider(BaseProvider):
 

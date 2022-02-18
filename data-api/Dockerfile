@@ -3,7 +3,9 @@ RUN apt-get update && apt-get -y install acl vim curl bzip2 cron libzstd-dev lib
 
 COPY ./env.yml /env.yml
 RUN conda update -n base -c defaults conda
-RUN conda env create --file env.yml
+RUN mkdir /miniconda
+RUN chmod 755 -R /miniconda
+RUN conda env create --file env.yml --prefix /conda/env
 ENV FLASK_APP=/EDR/edr_point_server.py
 ENV EDR_CONFIG=/EDR/config/config.yml
 
@@ -21,16 +23,16 @@ RUN cd /EDR/search_engine/ogc_csw/ && python setup.py build && python setup.py i
 RUN chmod +x /start.sh
 RUN chmod +x /ndfd_download.sh
 
-RUN groupadd ec2-user
-RUN useradd -r -u 1001 -g ec2-user ec2-user
-RUN mkdir /home/ec2-user
+#RUN groupadd ec2-user
+#RUN useradd -r -u 1001 -g ec2-user ec2-user
+#RUN mkdir /home/ec2-user
 RUN mkdir /data
-RUN chown -R ec2-user /EDR /data /home/ec2-user /var /tmp
-RUN chgrp -R ec2-user /EDR /data /home/ec2-user
+#RUN chown -R ec2-user /EDR /data /home/ec2-user /var /tmp
+#RUN chgrp -R ec2-user /EDR /data /home/ec2-user
 RUN chmod 775 -R /EDR /data /home /var /tmp /crontab.txt /build_search_engine.sh /start.sh /nwm_times.csv 
 RUN chmod 777 -R  /dask-worker-space
 WORKDIR /
-USER ec2-user
+USER root
 
 EXPOSE 5010
 EXPOSE 443

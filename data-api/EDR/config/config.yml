@@ -174,7 +174,7 @@ datasets:
             output_formats: ['CoverageJSON']
             data_source: 's3://shanemill-test/nwm-zarr'
             output_location: '/data/collections'
-            meta: '/nwm_times.csv'
+            meta: '/home/ec2-user/NCPP_EDR_API/data-api/nwm_times.csv'
     metar:
         name: metar
         title: Metar observations

@@ -1,0 +1,28 @@
+distributed.nanny - INFO -         Start Nanny at: 'tcp://172.31.49.30:45033'
+distributed.nanny - INFO -         Start Nanny at: 'tcp://172.31.49.30:41649'
+distributed.worker - INFO -       Start worker at:   tcp://172.31.49.30:36087
+distributed.worker - INFO -       Start worker at:   tcp://172.31.49.30:39787
+distributed.worker - INFO -          Listening to:   tcp://172.31.49.30:36087
+distributed.worker - INFO -          Listening to:   tcp://172.31.49.30:39787
+distributed.worker - INFO -          dashboard at:         172.31.49.30:37225
+distributed.worker - INFO -          dashboard at:         172.31.49.30:44513
+distributed.worker - INFO - Waiting to connect to:   tcp://172.31.44.45:36415
+distributed.worker - INFO - Waiting to connect to:   tcp://172.31.44.45:36415
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   1.40 GiB
+distributed.worker - INFO -                Memory:                   1.40 GiB
+distributed.worker - INFO -       Local Directory: /home/ec2-user/NCPP_EDR_API/data-api/dask-worker-space/worker-tdaip0a4
+distributed.worker - INFO -       Local Directory: /home/ec2-user/NCPP_EDR_API/data-api/dask-worker-space/worker-lofs6ilj
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -         Registered to:   tcp://172.31.44.45:36415
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://172.31.44.45:36415
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.core - INFO - Event loop was unresponsive in Worker for 3.87s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+slurmstepd: error: *** JOB 180 ON queue1-st-c5large-1 CANCELLED AT 2022-02-18T20:46:22 ***
