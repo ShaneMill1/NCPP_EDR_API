@@ -2,7 +2,7 @@ server:
     bind:
         host: 0.0.0.0
         port: 80
-    url: https://d3gyebu8v7bdv9.cloudfront.net
+    url: http://ec2-44-228-159-61.us-west-2.compute.amazonaws.com/
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     language: en-US

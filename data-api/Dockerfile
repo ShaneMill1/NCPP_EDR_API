@@ -34,6 +34,7 @@ USER ec2-user
 
 EXPOSE 5010
 EXPOSE 443
+EXPOSE 8787
 
 CMD ["./start.sh"]
 

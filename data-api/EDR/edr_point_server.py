@@ -18,18 +18,16 @@ from EDR.util import style_html
 from flask_cors import CORS
 from jinja2 import Environment, FileSystemLoader
 from dask.distributed import Client, LocalCluster
-
+from dask_jobqueue import SLURMCluster
 
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 
+cluster=SLURMCluster(header_skip=['--mem'],cores=2,memory="3GB")
+cluster.adapt(maximum_jobs=10)
+client=Client(cluster)
 
-#This is where we turn on/off dask cluster
-#cluster is local, docker is set up in start.sh so only need to connect client to 0.0.0.0:5500
-#cluster = LocalCluster(dashboard_address=':5610',scheduler_port=5600)
-#client = Client(cluster)
-client = Client('0.0.0.0:5500')
 
 with open(os.environ.get('EDR_CONFIG')) as fh:
    CONFIG = yaml.safe_load(fh)
