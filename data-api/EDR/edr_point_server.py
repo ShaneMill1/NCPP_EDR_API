@@ -24,8 +24,8 @@ app = Flask(__name__, static_url_path='/static')
 CORS(app)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 
-cluster=SLURMCluster(header_skip=['--mem'],cores=2,memory="3GB")
-cluster.adapt(maximum_jobs=10)
+cluster=SLURMCluster(header_skip=['--mem'],cores=2,memory="3GB",death_timeout=200)
+cluster.adapt(minimum_jobs=1,maximum_jobs=10)
 client=Client(cluster)
 
 

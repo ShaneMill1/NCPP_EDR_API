@@ -1,0 +1,28 @@
+Region: us-west-2
+Image:
+  Os: alinux2
+HeadNode:
+  InstanceType: c5.large
+  Networking:
+    SubnetId: subnet-0d201eed7e0678c70
+  Ssh:
+    KeyName: edr-api-uswest2
+Scheduling:
+  Scheduler: slurm
+  SlurmQueues:
+  - Name: queue1
+    ComputeResources:
+    - Name: c5large
+      InstanceType: c5.large
+      MinCount: 1
+      MaxCount: 5
+    Networking:
+      SubnetIds:
+      - subnet-0018060495aeffe12
+Tags:
+  - Key: ProjectName
+    Value: enviro_api
+  - Key: IAMUsername
+    Value: smill
+  - Key: ProjectEntity
+    Value: ParallelCluster

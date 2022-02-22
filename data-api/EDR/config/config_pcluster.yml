@@ -2,7 +2,7 @@ server:
     bind:
         host: 0.0.0.0
         port: 5400
-    url: http://ec2-44-228-159-61.us-west-2.compute.amazonaws.com:5400/
+    url: http://ec2-44-228-159-61.us-west-2.compute.amazonaws.com/
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     language: en-US
@@ -147,8 +147,8 @@ datasets:
         provider:
             name: s3_zarr
             type: s3_zarr
-            output_formats: ['CoverageJSON']
-            data_source: 's3://shanemill-test/nwm-zarr'
+            output_formats: ['CoverageJSON','NetCDF']
+            data_source: 's3://noaa-nwm-retro-v2-zarr-pds/'
             output_location: '/edr-data/edr-test-data/collections' 
             meta: './nwm_times.csv'
     wifs_png:
