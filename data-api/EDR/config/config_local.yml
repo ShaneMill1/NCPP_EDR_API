@@ -1,8 +1,8 @@
 server:
     bind:
         host: 0.0.0.0
-        port: 5400
-    url: http://ec2-44-228-159-61.us-west-2.compute.amazonaws.com/
+        port: 5010
+    url: http://ec2-44-228-159-61.us-west-2.compute.amazonaws.com:5010/
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     language: en-US

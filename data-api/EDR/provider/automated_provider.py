@@ -47,8 +47,9 @@ class AutomatedCollectionProvider(BaseProvider):
    
     def load_collection_meta(self,ds,cid):
        for dv in ds.data_vars:
-          first_dv=dv
-          break
+          if dv != 'time':
+             first_dv=dv
+             break
        self.parameters=ds.data_vars
        self.dimensions=ds.dims
        self.level_type=ds[first_dv].GRIB_typeOfLevel
@@ -268,7 +269,9 @@ class AutomatedCollectionProvider(BaseProvider):
            output=output.sel({self.lvkey: slice(z_value[0],z_value[1])})
        else:
            output=output.sel({self.lvkey: z_value})
-       #output=output.sel({self.fkey: time_range})
+       start_time=str(time_range.start_point).replace('Z','.000000000')
+       end_time=str(time_range.end_point).replace('Z','.000000000')
+       output=output.sel({'valid_time': slice(start_time,end_time)})
        if qtype=='point':
           output, output_boolean=get_point_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
           return output, output_boolean
