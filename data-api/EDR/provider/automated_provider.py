@@ -35,7 +35,7 @@ class AutomatedCollectionProvider(BaseProvider):
         ds_name=dsn[0]+'_'+dsn[1]
         self.DATASET_FOLDER = config['datasets'][ds_name]['provider']['data_source']
         self.dir_root=self.DATASET_FOLDER.replace('/collections','')
-        self.fkey='step'
+        self.fkey='valid_time'
         self.ftime_key='valid_time'
 
     def load_data(self,cid,instance,model):
@@ -264,14 +264,16 @@ class AutomatedCollectionProvider(BaseProvider):
            output=ds[params]
        else:
            output=ds
-       if '/' in z_value:
-           z_value=np.array(z_value.split('/')).astype(np.float64).tolist()
-           output=output.sel({self.lvkey: slice(z_value[0],z_value[1])})
-       else:
-           output=output.sel({self.lvkey: z_value})
-       start_time=str(time_range.start_point).replace('Z','.000000000')
-       end_time=str(time_range.end_point).replace('Z','.000000000')
-       output=output.sel({'valid_time': slice(start_time,end_time)})
+       if z_value:
+          if '/' in z_value:
+             z_value=np.array(z_value.split('/')).astype(np.float64).tolist()
+             output=output.sel({self.lvkey: slice(z_value[0],z_value[1])})
+          else:
+             output=output.sel({self.lvkey: z_value})
+       if time_range:
+          start_time=str(time_range.start_point).replace('Z','.000000000')
+          end_time=str(time_range.end_point).replace('Z','.000000000')
+          output=output.sel({'valid_time': slice(start_time,end_time)})
        if qtype=='point':
           output, output_boolean=get_point_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
           return output, output_boolean
@@ -383,7 +385,11 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
              output=output.to_dict()
              output=self.pt_to_covjson(output,coords,qtype)
              return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
-
+          if outputFormat=="NetCDF":
+             output_dict=output.to_dict()
+             actual_data=convert_traj_to_cf(self,output,output_dict,initial_time)
+             conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
+             return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
 
 
 def get_angles(vec_1,vec_2):
@@ -449,8 +455,6 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                 resolution_y_result=float(model_resolution)/100
              if resolution_y==None:
                 resolution_y_result=None
-             initial_time=output[params[0]].initial_time
-             initial_time=self.find_initial_time(initial_time)
              #Need to transform from 4326 to web mercator (3857)
              transformer_1 = pyproj.Transformer.from_proj(pyproj.Proj(init='epsg:4326'), pyproj.Proj(init='epsg:3857'))
              transformer_2 = pyproj.Transformer.from_proj(pyproj.Proj(init='epsg:3857'), pyproj.Proj(init='epsg:4326'))
@@ -536,7 +540,7 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                       lon=float(m[0])
                       if qtype=='linestringm':
                          time=coords[idm][2]
-                         time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S") - initial_time
+                         #time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S") - initial_time
                          time_list.append(time)
                       if qtype=='linestringz':
                          zedd=coords[idm][2]
@@ -544,7 +548,7 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                       if qtype=='linestringzm':
                          zedd=coords[idm][2]
                          time=coords[idm][3]
-                         time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S") - initial_time
+                         #time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S") - initial_time
                          time_list.append(time)
                          zedd_list.append(zedd)
                    #if resolution_y == 0:
@@ -731,10 +735,13 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                                traj_list.append(output_json)
                       except:
                          print('given the corridor height argument, corridor height extended beyond the bounds available')
-                cov_collection=concatenate_covjson.concat_covjson(traj_list)      
+                cov_collection=concatenate_covjson.concat_covjson(traj_list)
              if outputFormat=="CoverageJSON":
                 return json.dumps(cov_collection, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
-
+             if outputFormat=="NetCDF":
+                actual_data=convert_corridor_to_cf(self,output_list)
+                conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
+                return flask.send_from_directory('/tmp/','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
 
 
 #Conversion modules
@@ -808,8 +815,8 @@ def convert_corridor_to_cf(self,output_list):
    actual_data=xr.Dataset()
    for idx,traj_output in enumerate(output_list):
       traj_output=traj_output.rename({'dim_0':'trajectory_'+str(idx)})
-      traj_output=traj_output.rename({'lat_0':'lat_0_'+str(idx)})
-      traj_output=traj_output.rename({'lon_0':'lon_0_'+str(idx)})
+      traj_output=traj_output.rename({'latitude':'latitude_'+str(idx)})
+      traj_output=traj_output.rename({'longitude':'longitude_'+str(idx)})
       traj_output['trajectory_'+str(idx)].attrs['cf_role']='trajectory_id'
       for data_vars in traj_output.data_vars:
          traj_output=traj_output.rename({data_vars:data_vars+'_trajectory_'+str(idx)}) 
