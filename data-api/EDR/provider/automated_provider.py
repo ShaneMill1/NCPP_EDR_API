@@ -56,17 +56,6 @@ class AutomatedCollectionProvider(BaseProvider):
        self.lvkey=self.level_type
        return
     
-    def find_initial_time(self,initial_time):
-       initial_time=initial_time.replace('(','')
-       initial_time=initial_time.replace(')','')
-       initial_time=initial_time.replace('/','-')
-       month=initial_time[0:2]
-       day=initial_time[3:5]
-       year=initial_time[6:10]
-       time=initial_time[11:16]
-       initial_time=year+'-'+month+'-'+day+' '+time+':00'
-       initial_time=datetime.datetime.strptime(initial_time, "%Y-%m-%d %H:%M:%S")
-       return initial_time
  
     def pt_to_covjson(self,query_dict,coords,qtype):
        
@@ -329,11 +318,7 @@ def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, i
              return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
 
 
-
-
 def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
-       initial_time=output[params[0]].initial_time
-       initial_time=self.find_initial_time(initial_time)
        if qtype=='linestringm' or qtype=='linestring':
           if z_value:
              output=output.sel({self.lvkey:z_value})
@@ -350,6 +335,11 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
              output=output.to_dict()
              output=self.pt_to_covjson(output,coords,qtype)
              return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
+          if outputFormat=="NetCDF":
+             output_dict=output.to_dict()
+             actual_data=convert_corridor_to_cf(self,[output])
+             conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
+             return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
        if qtype == 'linestringm' or qtype == 'linestringz' or qtype == 'linestringzm':
           lat_list=list();lon_list=list();time_list=list();zedd_list=list()
           for m in coords:
@@ -359,7 +349,6 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
                  time=m[2]
                  lat_list.append(lat)
                  lon_list.append(lon)
-                 time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S")-initial_time
                  time_list.append(time)
               if qtype=='linestringz':
                  zedd=m[2]
@@ -369,7 +358,6 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
               if qtype=='linestringzm':
                  zedd=m[2]
                  time=m[3]
-                 time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S")-initial_time
                  time_list.append(time)
                  lat_list.append(lat)
                  lon_list.append(lon)
@@ -387,49 +375,9 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
              return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
           if outputFormat=="NetCDF":
              output_dict=output.to_dict()
-             actual_data=convert_traj_to_cf(self,output,output_dict,initial_time)
+             actual_data=convert_corridor_to_cf(self,[output])
              conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
              return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
-
-
-def get_angles(vec_1,vec_2):
-    """
-    return the angle, in degrees, between two vectors
-    """
-    
-    dot = np.dot(vec_1, vec_2)
-    det = np.cross(vec_1,vec_2)
-    angle_in_rad = np.arctan2(det,dot)
-    return np.degrees(angle_in_rad)
-
-
-
-def simplify_by_angle(poly_in, deg_ratio_tol = 0.05):
-    """
-    try to remove persistent coordinate points that remain after
-    simplify, convex hull, or something, etc. with some trig instead
-    params:
-    poly_in: shapely Polygon 
-    deg_tol: degree tolerance for comparison between successive vectors
-    return: 'simplified' polygon
-    
-    """
-    
-    ext_poly_coords = poly_in.coords[:]
-    vector_rep = np.diff(ext_poly_coords,axis = 0)
-    angles_list = []
-    angle_ratio_list=[]
-    for i in range(0,len(vector_rep) -1 ):
-        angles_list.append(np.abs(get_angles(vector_rep[i],vector_rep[i+1])))
-    max_of_list=max(angles_list)
-    for a in angles_list:
-       ratio=a/max_of_list
-       angle_ratio_list.append(ratio)
-    index_remove_list=list()
-    for ida,a in enumerate(angle_ratio_list,start=1):
-       if a < deg_ratio_tol:
-          index_remove_list.append(ida)
-    return index_remove_list
 
 
 
@@ -540,7 +488,6 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                       lon=float(m[0])
                       if qtype=='linestringm':
                          time=coords[idm][2]
-                         #time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S") - initial_time
                          time_list.append(time)
                       if qtype=='linestringz':
                          zedd=coords[idm][2]
@@ -548,7 +495,6 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                       if qtype=='linestringzm':
                          zedd=coords[idm][2]
                          time=coords[idm][3]
-                         #time=datetime.datetime.strptime(str(time), "%Y-%m-%dT%H:%M:%S") - initial_time
                          time_list.append(time)
                          zedd_list.append(zedd)
                    #if resolution_y == 0:
@@ -666,15 +612,15 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                          if len(zedd_list)>0 and len(time_list)>0:
                             coords_list.append((lon_list[idx],lat_list[idx],time_interp_list[idx],zedd_interp_list[idx]))
                       time_dt_list=list()
-                      try:
-                         for time_iso in output[self.fkey].values:
-                            time_dt=datetime.datetime.strptime(str(time_iso), "%Y-%m-%dT%H:%M:%S")
-                            time_delta=time_dt-initial_time
-                            time_dt_list.append(time_delta)
-                         output=output.assign_coords({self.fkey:time_dt_list})
-                      except:
+                      #try:
+                      #   for time_iso in output[self.fkey].values:
+                      #      time_dt=datetime.datetime.strptime(str(time_iso), "%Y-%m-%dT%H:%M:%S")
+                      #      time_delta=time_dt-initial_time
+                      #      time_dt_list.append(time_delta)
+                      #   output=output.assign_coords({self.fkey:time_iso})
+                      #except:
                          #conversion to delta already occurred
-                         pass
+                      #   pass
                       for idx,l in enumerate(lat_list):
                          query_args={'latitude': xr.DataArray(lat_list), 'longitude': xr.DataArray(lon_list)}
                    if qtype=='linestringm':
@@ -745,72 +691,6 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
 
 
 #Conversion modules
-def convert_traj_to_cf(self,output,output_dict,initial_time):
-             time_dt_list=list()
-             if not isinstance(output[self.fkey].values,list):
-                t_vals=[output[self.fkey].values]
-             else:
-                t_vals=output[self.fkey].values
-             for time_iso in t_vals: 
-                time_delta=str(np.datetime64(initial_time)-time_iso).split('.')[0]             
-                time_dt_list.append(time_delta)
-             output=output.assign_coords({self.fkey:time_dt_list})
-             grib_template=self.DATASET_FOLDER+'/'+self.model+'/'+self.cycle+'/'+self.cycle+'_'+self.model+'_template.grib'
-             convert_to_grib.create_grib(output_dict,grib_template,self.lv_list,self.uuid,self.dir_root,False)
-             template_list=cfgrib.open_datasets(self.dir_root+'/output-'+self.uuid+'.grb')
-             template_data=xr.open_dataset(self.dir_root+'/output-'+self.uuid+'.grb',engine='cfgrib')
-             actual_data=output
-             for coord_og in output.coords:
-                if 'forecast_time' in coord_og:
-                   actual_data=actual_data.rename({coord_og: 'step'})
-                   initial_time=np.datetime64(self.find_initial_time(actual_data.data_vars[next(iter(actual_data.data_vars))].initial_time))
-                   valid_time=actual_data['step'].values 
-                   actual_data=actual_data.assign_coords({'valid_time': valid_time})
-                   actual_data=actual_data.assign_coords({'time': initial_time})
-                for coord_new in template_data.coords:
-                   try:
-                      if output[coord_og].long_name == template_data[coord_new].long_name:
-                         actual_data=actual_data.rename({coord_og: coord_new})
-                      print(coord_og+' |break| '+coord_new)
-                   except:
-                      print('coord passed')
-                   if 'lv_' in coord_og:
-                      coord_og_split=coord_og.split('_')
-                      for c in coord_og_split:
-                         if c.lower() in coord_new.lower():
-                            try:
-                               actual_data=actual_data.rename({coord_og: coord_new})
-                               actual_data[coord_new]=actual_data[coord_new].assign_attrs(long_name=template_data[coord_new].long_name)
-                               actual_data[coord_new]=actual_data[coord_new].assign_attrs(units=template_data[coord_new].units)
-                            except:
-                               pass
-                      try:
-                         if actual_data[coord_og].long_name:
-                            if actual_data[coord_og].long_name.lower().split(' ')[0] in coord_new.lower():
-                               actual_data=actual_data.rename({coord_og: coord_new})
-                               actual_data[coord_new]=actual_data[coord_new].assign_attrs(long_name=template_data[coord_new].long_name)
-                               actual_data[coord_new]=actual_data[coord_new].assign_attrs(units=template_data[coord_new].units)
-                               break
-                      except:
-                         pass
-             for data_var_og in output.data_vars:
-                for t in template_list:
-                   for data_var_new in t.data_vars:
-                      output_initial=output[data_var_og].long_name.replace('-',' ')
-                      output_initial=re.sub(r" ?\([^)]+\)", "", output_initial)
-                      print(output_initial.lower()+' |break| '+ t[data_var_new].long_name.lower())
-                      if output_initial.lower() == t[data_var_new].long_name.lower():
-                         actual_data=actual_data.rename({data_var_og: data_var_new})
-             actual_data.attrs=template_data.attrs
-             actual_data=actual_data.rename({'dim_0':'trajectory'})
-             actual_data=actual_data.assign_coords({'trajectory':actual_data['trajectory']})
-             actual_data['trajectory'].attrs={'cf_role':'trajectory_id','long_name':'trajectory','units':'degrees'}
-             actual_data.attrs['_FillValue']='nan'
-             actual_data=actual_data.assign_attrs({"featureType": "trajectory"})
-             return actual_data
-
-
-
 def convert_corridor_to_cf(self,output_list):
    actual_data=xr.Dataset()
    for idx,traj_output in enumerate(output_list):
