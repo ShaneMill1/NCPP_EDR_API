@@ -262,7 +262,10 @@ class AutomatedCollectionProvider(BaseProvider):
        if time_range:
           start_time=str(time_range.start_point).replace('Z','.000000000')
           end_time=str(time_range.end_point).replace('Z','.000000000')
-          output=output.sel({'valid_time': slice(start_time,end_time)})
+          if start_time == end_time:
+             output=output.sel({'valid_time': start_time})
+          else:
+             output=output.sel({'valid_time': slice(start_time,end_time)})
        if qtype=='point':
           output, output_boolean=get_point_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
           return output, output_boolean
@@ -308,7 +311,7 @@ def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, i
           output_adl=output
           output=output.assign_coords({'longitude': getattr(output,'longitude') - 360})
           output_bdl=output
-          output=xr.concat([output_bdl,output_adl],dim='lon_0')
+          output=xr.concat([output_bdl,output_adl],dim='longitude')
           output=output.rio.set_spatial_dims('longitude','latitude',inplace=True)
           output=output.rio.write_crs(4326)
           output=output.rio.clip(geometries,output.rio.crs)
@@ -316,6 +319,17 @@ def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, i
              output=output.to_dict()
              output=self.pt_to_covjson(output,coords,qtype)
              return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
+          if outputFormat=="NetCDF":
+             output.to_netcdf('/tmp/output-'+self.uuid+'.nc',mode='w')
+             return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
+          if outputFormat=="COGeotiff":
+             f_location,zip_bool=export_geotiff(self,output)
+             if zip_bool==False:
+                return flask.send_from_directory('/tmp',self.uuid+'.tif',as_attachment=True), '/tmp/'+self.uuid+'.tif'
+             if zip_bool==True:
+                root='/tmp/temp_dir/'
+                zip_file=f_location.split('/')[-1]+'.zip'
+                return flask.send_from_directory(root,zip_file,as_attachment=True), 'no_delete'
 
 
 def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
@@ -715,34 +729,37 @@ def export_geotiff(self,output):
    dim_tracker={}
    zip_bool=False
    for dims in output.dims:
-      if 'forecast_time' in dims or 'lv_' in dims:
+      if dims == 'valid_time' or (dims != 'latitude' and dims != 'longitude'):
          if output.dims[dims] == 1:
             output=output.sel({dims: output[dims].values[0]})
          else:
-            dim_tracker[dims]=output[dims].values.tolist()
+            if dims=='valid_time':
+               dim_tracker[dims]=output[dims].values.astype('str').tolist()
+            else:
+               dim_tracker[dims]=output[dims].values.tolist()
    #for forecast time selection I need to use np.timedelta64
    if len(dim_tracker)==0:
-      f_location=self.dir_root+'/'+self.uuid+'.tif'
+      f_location='/tmp/'+self.uuid+'.tif'
       output_array=output.to_array()
       output_array=output_array.compute()
       df=write_cog(output_array,fname=f_location)
    else:
-      f_location=self.dir_root+'/temp_dir/'+self.uuid
+      f_location='/tmp/temp_dir/'+self.uuid
       os.makedirs(f_location,exist_ok=True)
       if len(dim_tracker.keys())==2:
          for element1 in dim_tracker[list(dim_tracker.keys())[0]]:
             print(str(element1)+'-----')
-            for element2 in dim_tracker[list(dim_tracker.keys())[1]]:
-               sample=output.sel({list(dim_tracker.keys())[0]:np.timedelta64(element1),list(dim_tracker.keys())[1]:element2})
+            for element2 in dim_tracker[[*dim_tracker][1]]:
+               sample=output.sel({[*dim_tracker][0]:element1,[*dim_tracker][1]:element2})
                sample_array=sample.to_array()
                sample_array=sample_array.compute()
-               fname=str(element1)+'_'+str(int(element2))+'.tif'
+               fname=str(element1)+'_'+str(element2)+'.tif'
                w_location=f_location+'/'+fname
                df=write_cog(sample_array,fname=w_location)
       if len(dim_tracker.keys())==1:
-         if 'forecast_time' in list(dim_tracker.keys())[0]:
+         if 'valid_time' in list(dim_tracker.keys())[0]:
             for element in dim_tracker[list(dim_tracker.keys())[0]]:
-               sample=output.sel({list(dim_tracker.keys())[0]:np.timedelta64(element)})
+               sample=output.sel({list(dim_tracker.keys())[0]:element})
                sample_array=sample.to_array()
                sample_array=sample_array.compute()
                fname=str(element)+'.tif'
