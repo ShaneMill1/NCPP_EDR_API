@@ -113,5 +113,5 @@ if __name__ == "__main__":
    root_dir=args.root_dir
    model_run_time=datetime.today().isoformat().split('T')[0]+'T'+model_run+':00:00'
    download_grib_location=root_dir+'/'+model+'/'+model_run_time
-   zarr_output_location='s3://enviroapi-bucket-1/zarr/'+model+'/'+model_run_time+'/'
+   zarr_output_location='s3://enviroapi-bucket-2/zarr/'+model+'/'+model_run_time+'/'
    create_collections(download_grib_location,zarr_output_location)

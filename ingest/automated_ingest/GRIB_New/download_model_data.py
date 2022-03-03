@@ -13,9 +13,12 @@ import urllib
 
 
 def sys_request(i):
-   file_name=i.split('/')[-1]
-   urllib.request.urlretrieve(i,file_location+'/data_download/'+file_name)
-   print(file_name + ' downloaded')
+   try:
+      file_name=i.split('/')[-1]
+      urllib.request.urlretrieve(i,file_location+'/data_download/'+file_name)
+      print(file_name + ' downloaded')
+   except:
+      pass
    return
 
 
@@ -30,7 +33,7 @@ def multi_process_loop(model,model_run,file_location):
    soup=BeautifulSoup(html,'html.parser')
    for hr in soup.find_all('a'):
       file_text=hr.text
-      if 'gfs.t00z.pgrb2b.1p00' in hr.text and '.idx' not in hr.text:
+      if 'gfs.t00z.pgrb2b.1p00' in hr.text and '.idx' not in hr.text and '.anl' not in hr.text:
          url_get=url+hr.text
          file_list.append(url_get)
    pool=Pool()
