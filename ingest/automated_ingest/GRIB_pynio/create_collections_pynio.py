@@ -67,6 +67,13 @@ def create_collections(download_grib_location,zarr_output_location,model):
                   dim_val=str(ds[dim_vala].values[idd])+'-'+str(ds[dim_valb].values[idd])
                   dim_val_list.append(dim_val)
                col_ds=col_ds.assign_coords({c_l:dim_val_list})
+
+      for coord in col_ds.coords:
+         if 'forecast_time' in coord:
+            initial_time=col_ds[col_dvs[0]].initial_time
+            initial_time=np.datetime64(find_initial_time(initial_time))
+            time_vals=(initial_time+col_ds[coord].values).astype(str)
+            col_ds=col_ds.assign_coords({coord:time_vals})
       convert_to_zarr(col_ds,collection_dict,key,value)
    client.close()
    return
@@ -84,6 +91,19 @@ def convert_to_zarr(col_ds,collection_dict,key,value):
    col_ds.to_zarr(fsspec.get_mapper(zarr_output_location+key,client_kwargs={'region_name':'us-west-2'}),mode='w',compute=True)
    print(key+' converted to zarr')
    return
+
+
+def find_initial_time(initial_time):
+    initial_time=initial_time.replace('(','')
+    initial_time=initial_time.replace(')','')
+    initial_time=initial_time.replace('/','-')
+    month=initial_time[0:2]
+    day=initial_time[3:5]
+    year=initial_time[6:10]
+    time=initial_time[11:16]
+    initial_time=year+'-'+month+'-'+day+' '+time+':00'
+    initial_time=datetime.strptime(initial_time, "%Y-%m-%d %H:%M:%S")
+    return initial_time
 
 
 if __name__ == "__main__":
