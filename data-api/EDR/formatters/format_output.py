@@ -545,12 +545,7 @@ class FormatOutput(object):
                  'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
               if f_key:
                  grib_name=short_name
-                 if meta=='cfgrib':
-                    time_values=collection_ds[f_key].values.astype(str).tolist()
-                 if meta=='pynio':
-                    initial_time=collection_ds[p].initial_time
-                    initial_time=np.datetime64(self.find_initial_time(initial_time))
-                    time_values=(initial_time+collection_ds[f_key].values).astype(str).tolist()
+                 time_values=collection_ds[f_key].values.astype(str).tolist()
                  if isinstance(time_values,str):
                     time_values=[time_values]
                  output['parameters'].update({p: {\
