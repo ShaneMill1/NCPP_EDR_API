@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 import shutil
 import json
-
+import fsspec
 
 
 def expand_dims(d):
@@ -67,11 +67,11 @@ def create_collections(download_grib_location,zarr_output_location,model):
                   dim_val=str(ds[dim_vala].values[idd])+'-'+str(ds[dim_valb].values[idd])
                   dim_val_list.append(dim_val)
                col_ds=col_ds.assign_coords({c_l:dim_val_list})
-      convert_to_zarr(file_location,col_ds,collection_dict,key,value)
+      convert_to_zarr(col_ds,collection_dict,key,value)
    client.close()
    return
 
-def convert_to_zarr(file_location,col_ds,collection_dict,key,value):
+def convert_to_zarr(col_ds,collection_dict,key,value):
    chunk_dict={}
    for dim in col_ds.dims:
       if 'lat_' in dim:

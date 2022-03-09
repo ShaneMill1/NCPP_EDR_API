@@ -28,7 +28,9 @@ def multi_process_loop(model,model_run,file_location):
    this_day=date.today().isoformat().replace('-','')
    url='https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/gfs.'+this_day+'/'+model_run+'/atmos/'
    file_list=[]
+   print('requesting '+url)
    rq=requests.get(url)
+   print('request successful')
    html=rq.text
    soup=BeautifulSoup(html,'html.parser')
    for hr in soup.find_all('a'):
