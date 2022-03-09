@@ -332,7 +332,7 @@ def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, i
              output=self.pt_to_covjson(output,coords,qtype)
              return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
           if outputFormat=="NetCDF":
-             output.to_netcdf('/tmp/output-'+self.uuid+'.nc',mode='w')
+             output.load().to_netcdf('/tmp/output-'+self.uuid+'.nc',mode='w')
              return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
           if outputFormat=="COGeotiff":
              f_location,zip_bool=export_geotiff(self,output)
@@ -364,7 +364,7 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
           if outputFormat=="NetCDF":
              output_dict=output.to_dict()
              actual_data=convert_corridor_to_cf(self,[output])
-             conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
+             conversion=actual_data.load().to_netcdf('/tmp/output-'+self.uuid+'.nc')
              return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
        if qtype == 'linestringm' or qtype == 'linestringz' or qtype == 'linestringzm':
           lat_list=list();lon_list=list();time_list=list();zedd_list=list()
@@ -402,7 +402,7 @@ def get_trajectory_data(self,dataset, qtype, coords, time_range, z_value, params
           if outputFormat=="NetCDF":
              output_dict=output.to_dict()
              actual_data=convert_corridor_to_cf(self,[output])
-             conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
+             conversion=actual_data.load().to_netcdf('/tmp/output-'+self.uuid+'.nc')
              return flask.send_from_directory('/tmp','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
 
 
@@ -712,7 +712,7 @@ def get_corridor_data(self,dataset, qtype, coords, time_range, z_value, params, 
                 return json.dumps(cov_collection, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
              if outputFormat=="NetCDF":
                 actual_data=convert_corridor_to_cf(self,output_list)
-                conversion=actual_data.to_netcdf('/tmp/output-'+self.uuid+'.nc')
+                conversion=actual_data.loadt().to_netcdf('/tmp/output-'+self.uuid+'.nc')
                 return flask.send_from_directory('/tmp/','output-'+self.uuid+'.nc',as_attachment=True), '/tmp/output-'+self.uuid+'.nc'
 
 
