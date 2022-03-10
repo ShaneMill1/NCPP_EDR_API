@@ -17,21 +17,16 @@ from EDR.formatters.format_output import FormatOutput
 from EDR.util import style_html
 from flask_cors import CORS
 from jinja2 import Environment, FileSystemLoader
-from dask.distributed import Client, LocalCluster
-from dask_jobqueue import SLURMCluster
+from distributed import Client
+import time
 
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 
-
-#cluster = LocalCluster(n_workers=8,dashboard_address=':5610',scheduler_port=5600)
-#client = Client(cluster)
-
-cluster=SLURMCluster(header_skip=['--mem'],cores=2,memory="3GB",death_timeout=200)
-cluster.adapt(minimum_jobs=1,maximum_jobs=10)
-client=Client(cluster)
-
+tcp_scheduler=os.environ['tcp_scheculer']
+client=Client(tcp_scheduler)
+time.sleep(3)
 
 with open(os.environ.get('EDR_CONFIG')) as fh:
    CONFIG = yaml.safe_load(fh)
