@@ -20,12 +20,11 @@ from flask import request as rq
 import sqlite3
 import xarray as xr
 import fsspec
-from dask.distributed import Client
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import s3fs
-
+import numpy as np
 
 class FormatOutput(object):
     def __init__(self, config,link_path, met_ip=False):
@@ -185,16 +184,28 @@ class FormatOutput(object):
         })
         return links
 
+    def link_template_radius(self, links, inpath):
+        in_parts = inpath[1:].split('/')
+        links.append({
+            "href": self.server + inpath + "",
+            "rel": "self",
+            "type": "radius",
+            "title": "Radius Query",
+            "self": "Radius"
+        })
+        return links
+
     def link_template_polygon(self, links, inpath):
         in_parts = inpath[1:].split('/')
         links.append({
             "href": self.server + inpath + "",
             "rel": "self",
-            "type": "polygon",
-            "title": "Polygon Query",
-            "self": "Polygon"
+            "type": "area",
+            "title": "Area Query",
+            "self": "Area"
         })
         return links
+
 
     def link_template_cube(self, links, inpath):
         in_parts = inpath[1:].split('/')
@@ -491,6 +502,8 @@ class FormatOutput(object):
         point_query_selector=point+'_query_selector'
         polygon='/collections/'+collname+'/instances/'+auto_cycle+'/area'
         polygon_query_selector=polygon+'_query_selector'
+        radius='/collections/'+collname+'/instances/'+auto_cycle+'/radius'
+        radius_query_selector='/collections/'+collname+'/instances/'+auto_cycle+'/radius_query_selector'
         cube='/collections/'+collname+'/instances/'+auto_cycle+'/cube'
         cube_query_selector=cube+'_query_selector'
         trajectory='/collections/'+collname+'/instances/'+auto_cycle+'/trajectory'
@@ -499,16 +512,18 @@ class FormatOutput(object):
         corridor_query_selector=corridor+'_query_selector'
         orig=self.link_template( [], '/collections/'+collname+'/instances/'+auto_cycle)
         point=self.link_template_point( [], point)
+        radius=self.link_template_radius([],radius)
         polygon=self.link_template_polygon( [], polygon)
         cube=self.link_template_cube( [], cube)
         trajectory=self.link_template_trajectory( [], trajectory)
         corridor=self.link_template_corridor( [], corridor)
         point_query_selector=self.link_template_point( [], point_query_selector)
+        radius_query_selector=self.link_template_radius( [], radius_query_selector)
         polygon_query_selector=self.link_template_polygon( [], polygon_query_selector)
         cube_query_selector=self.link_template_cube( [], cube_query_selector) 
         trajectory_query_selector=self.link_template_trajectory( [], trajectory_query_selector)
         corridor_query_selector=self.link_template_corridor( [], corridor_query_selector)
-        link_list=orig+point+polygon+cube+trajectory+corridor+point_query_selector+polygon_query_selector+cube_query_selector+trajectory_query_selector+corridor_query_selector
+        link_list=orig+point+radius+polygon+cube+trajectory+corridor+point_query_selector+radius_query_selector+polygon_query_selector+cube_query_selector+trajectory_query_selector+corridor_query_selector
         output['links']=link_list
         output['collections']=collname
         output['title']=collname
@@ -524,49 +539,82 @@ class FormatOutput(object):
         collection_ds=xr.open_zarr(zarr_open)
         for idx,p in enumerate(collection_ds.data_vars):
            if p!='time':
-              if 'valid_time' in collection_ds.coords:
-                 f_key='valid_time'
+              for co in collection_ds.coords:
+                 if '_time' in co:
+                    f_key=co
+              #determine if pynio terms or cfgrib terms
+              if hasattr(collection_ds[p],'GRIB_shortName'):
+                 meta='cfgrib'
               else:
-                 f_key=None
+                 meta='pynio'
+              if meta=='cfgrib':
+                 short_name=collection_ds[p].GRIB_shortName
+                 type_of_level=collection_ds[p].GRIB_typeOfLevel
+              if meta=='pynio':
+                 short_name=p.split('_')[0]
+                 type_of_level=collection_ds[p].level_type   
               if not f_key:
                  output['parameters'].update({p: {\
-                 'description': {'en': collection_ds[p].GRIB_shortName},
+                 'description': {'en': short_name},
                  'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
                  'observed-property': {'label': {'en':  collection_ds[p].units}},
                  'extent': {'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
               if f_key:
-                 grib_name=collection_ds[p].GRIB_shortName
-                 time_values=collection_ds.valid_time.values.astype(str).tolist()
+                 grib_name=short_name
+                 time_values=collection_ds[f_key].values.astype(str).tolist()
                  if isinstance(time_values,str):
                     time_values=[time_values]
                  output['parameters'].update({p: {\
-                 'description': {'en': collection_ds[p].GRIB_shortName},
+                 'description': {'en': short_name},
                  'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
                  'observed-property': {'label': {'en':  collection_ds[p].units}}, 
                  'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},
                  'horizontal': {'name': ['longitude','latitude'],'coordinates': ['x','y'],'geographic': ""}}}})
                  dims='\t'.join(collection_ds.keys())      
                  for l in collection_ds.coords:
-                    if l==collection_ds[p].GRIB_typeOfLevel:
-                       level=l
-                       c_list=list()
-                       c_list=collection_ds[l].values.astype(str).tolist() 
-                       try:
-                          output['parameters'].update({p: {\
-                          'description': {'en': collection_ds[p].GRIB_shortName},
-                          'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-                          'observed-property': {'label': {'en':  collection_ds[p].GRIB_shortName}},
-                          'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
-                          {'name': ['longitude','latitude'],\
-                          'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
-                       except:
-                          output['parameters'].update({p: {\
-                          'description': {'en': collection_ds[p].GRIB_shortName},
-                          'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
-                          'observed-property': {'label': {'en':  collection_ds[p].GRIB_shortName}},
-                          'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
-                          {'name': ['longitude','latitude'],\
-                          'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                    if meta=='cfgrib':
+                       if l==collection_ds[p].GRIB_typeOfLevel:
+                          level=l
+                          c_list=list()
+                          c_list=collection_ds[l].values.astype(str).tolist() 
+                          try:
+                             output['parameters'].update({p: {\
+                             'description': {'en': collection_ds[p].GRIB_shortName},
+                             'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                             'observed-property': {'label': {'en':  collection_ds[p].GRIB_shortName}},
+                             'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
+                             {'name': ['longitude','latitude'],\
+                             'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                          except:
+                             output['parameters'].update({p: {\
+                             'description': {'en': collection_ds[p].GRIB_shortName},
+                             'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                             'observed-property': {'label': {'en':  collection_ds[p].GRIB_shortName}},
+                             'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
+                             {'name': ['longitude','latitude'],\
+                             'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                    if meta=='pynio':
+                       if 'lv_' in l:
+                          level=l
+                          c_list=list()
+                          c_list=collection_ds[l].values.astype(str).tolist()
+                          try:
+                             output['parameters'].update({p: {\
+                             'description': {'en': short_name},
+                             'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                             'observed-property': {'label': {'en':  short_name}},
+                             'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
+                             {'name': ['longitude','latitude'],\
+                             'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+                          except:
+                             output['parameters'].update({p: {\
+                             'description': {'en': short_name},
+                             'unit': {'label':{'en': ''} ,'symbol':{'value':'','type':''}},
+                             'observed-property': {'label': {'en':  short_name}},
+                             'extent': {'temporal': {'name': ['time'],'coordinates':['time'], 'range': time_values},'horizontal':\
+                             {'name': ['longitude','latitude'],\
+                             'coordinates': ['x','y'],'geographic': "BBOX[]"},'vertical':{'name':[level],'coordinates':['z'],'range':c_list}}}})
+
               provider=collname.split('_')[0]+'_'+collname.split('_')[1]
               output['f']=self.config['datasets'][provider]['provider']['output_formats']
               output['crs']=[{"id":"EPSG:4326","wkt":util.proj2wkt(util.WGS84)}]
@@ -577,22 +625,49 @@ class FormatOutput(object):
               output['polygon-query-options']['interpolation-y']=['nearest_neighbor']
               output['id']=collname
               output['instance-axes']={}
-              output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection_ds[p].GRIB_longitudeOfFirstGridPointInDegrees,\
-              'upper-bound': collection_ds[p].GRIB_longitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}
-              output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].GRIB_latitudeOfFirstGridPointInDegrees,\
-              'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
-              level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.astype(str).tolist()
-              level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
-              level_units=level.units
-              if len(level_values)>1:
-                 output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
-              else:
-                 output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
-              valid_times=collection_ds.valid_time.values.astype(str)
+              if meta=='cfgrib':
+                 output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection_ds[p].GRIB_longitudeOfFirstGridPointInDegrees,\
+                 'upper-bound': collection_ds[p].GRIB_longitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}
+                 output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].GRIB_latitudeOfFirstGridPointInDegrees,\
+                 'upper-bound': collection_ds[p].GRIB_latitudeOfLastGridPointInDegrees, 'uom-label': "degrees"}       
+                 level_values=collection_ds[p][collection_ds[p].GRIB_typeOfLevel].values.astype(str).tolist()
+                 level=collection_ds[collection_ds[p].GRIB_typeOfLevel]
+                 level_units=level.units
+                 if len(level_values)>1:
+                    output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
+                 else:
+                    output['instance-axes']['z']={'label': collection_ds[p].GRIB_typeOfLevel, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
+              if meta=='pynio':
+                 output['instance-axes']['x']={'label': 'Longitude', 'lower-bound': collection_ds[p].lon_0.values.tolist()[0],\
+                 'upper-bound': collection_ds[p].lon_0.values.tolist()[-1], 'uom-label': "degrees"}
+                 output['instance-axes']['y']={'label': 'Latitude', 'lower-bound': collection_ds[p].lat_0.values.tolist()[0],\
+                 'upper-bound': collection_ds[p].lat_0.values.tolist()[-1], 'uom-label': "degrees"}
+                 for cl in collection_ds[p].coords:
+                    if 'lv_' in cl:
+                       level=cl
+                       level_values=collection_ds[p][level].values.astype(str).tolist()
+                       level_units=collection_ds[p][level].units
+                       if len(level_values)>1:
+                          output['instance-axes']['z']={'label': type_of_level, 'lowerBound': level_values[0], 'upper-bound': level_values[-1], 'uom-label': level_units}
+                       else:
+                          output['instance-axes']['z']={'label': type_of_level, 'lowerBound': level_values[0], 'upper-bound': level_values[0], 'uom-label': level_units}
+              valid_times=collection_ds[f_key].values.astype(str)
               valid_times=time_values
               output['instance-axes']['t']={'label': 'Time', 'lower-bound': valid_times[0], 'upper-bound': valid_times[-1], 'uom-label': "ISO8601"}
         return output
 
+
+    def find_initial_time(self,initial_time):
+       initial_time=initial_time.replace('(','')
+       initial_time=initial_time.replace(')','')
+       initial_time=initial_time.replace('/','-')
+       month=initial_time[0:2]
+       day=initial_time[3:5]
+       year=initial_time[6:10]
+       time=initial_time[11:16]
+       initial_time=year+'-'+month+'-'+day+' '+time+':00'
+       initial_time=datetime.strptime(initial_time, "%Y-%m-%d %H:%M:%S")
+       return initial_time
 
     def summary(self, collname):
         output = []

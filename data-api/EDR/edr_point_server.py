@@ -27,9 +27,9 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 
 #This is where we turn on/off dask cluster
 #cluster is local, docker is set up in start.sh so only need to connect client to 0.0.0.0:5500
-#cluster = LocalCluster(dashboard_address=':5610',scheduler_port=5600)
-#client = Client(cluster)
-client = Client('0.0.0.0:5500')
+cluster = LocalCluster(dashboard_address=':5610',scheduler_port=5600)
+client = Client(cluster)
+#client = Client('0.0.0.0:5500')
 
 with open(os.environ.get('EDR_CONFIG')) as fh:
    CONFIG = yaml.safe_load(fh)
@@ -249,6 +249,19 @@ def get_cube_data_automated(collection, identifier):
 @app.route('/collections/<collection>/instances/<identifier>/cube_query_selector')
 def get_cube_data_automated_query_selector(collection, identifier):
         return _render_j2_template(CONFIG, "index_p.html", None)
+
+
+@app.route('/collections/<collection>/instances/<identifier>/radius')
+def get_radius_data_automated(collection, identifier):
+   headers, status_code, content = api_.get_feature(request.headers, request.args, collection, identifier)
+   response = make_response(content, status_code)
+   if headers:
+      response.headers = headers
+   return response
+
+@app.route('/collections/<collection>/instances/<identifier>/radius_query_selector')
+def get_radius_data_automated_query_selector(collection, identifier):
+   return _render_j2_template(CONFIG, "index_p.html", None)
 
 
 @app.route('/collections/<collection>/instances/<identifier>/trajectory')
