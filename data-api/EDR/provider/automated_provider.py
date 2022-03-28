@@ -27,6 +27,9 @@ import cfgrib
 import zipfile
 import pathlib
 import s3fs
+from functools import partial
+
+
 
 class AutomatedCollectionProvider(BaseProvider):
     def __init__(self,dataset,config):
@@ -80,7 +83,7 @@ class AutomatedCollectionProvider(BaseProvider):
           output['domain']['axes']['y']={}
           output['domain']['axes']['x']['values']=[output['coords'][self.lonkey]['data']]
           output['domain']['axes']['y']['values']=[output['coords'][self.latkey]['data']]
-       elif qtype=='polygon':
+       elif qtype=='polygon' or qtype=='radius':
           output['domain']['domainType']="Grid"
           output['domain']['axes']['x']={}
           output['domain']['axes']['y']={}
@@ -278,11 +281,14 @@ class AutomatedCollectionProvider(BaseProvider):
              output=output.sel({self.fkey: start_time})
           else:
              output=output.sel({self.fkey: slice(start_time,end_time)})
-       if qtype=='point':
+       if qtype_endpoint=='position':
           output, output_boolean=get_point_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
           return output, output_boolean
        if qtype=='polygon':
           output, output_boolean=get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
+          return output, output_boolean
+       if qtype_endpoint=='radius':
+          output, output_boolean=get_radius_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
           return output, output_boolean
        if qtype_endpoint=='trajectory':
           output, output_boolean=get_trajectory_data(self, dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output)
@@ -307,7 +313,86 @@ def get_point_data(self,dataset, qtype, coords, time_range, z_value, params, ins
       output=self.pt_to_covjson(output,coords,qtype)
    return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
 
-
+def get_radius_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
+   query_args={}
+   lonattr=str(self.lonkey)
+   output=output.rio.set_spatial_dims(self.lonkey,self.latkey,inplace=True)
+   output=output.rio.write_crs(4326)
+   point=Point(coords[0],coords[1])
+   local_azimuthal_projection="+proj=aeqd +R=6371000 +units=m +lat_0="+str(point.y)+" +lon_0="+str(point.x)
+   
+   wgs84_to_aeqd = partial(
+      pyproj.transform,
+      pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
+      pyproj.Proj(local_azimuthal_projection),
+   )
+   aeqd_to_wgs84 = partial(
+      pyproj.transform,
+      pyproj.Proj(local_azimuthal_projection),
+      pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
+   )
+   point_transformed = transform(wgs84_to_aeqd, point)
+   within=float(flask.request.args['within'])*1000
+   buffer_find=point_transformed.buffer(within)
+   buffer_wgs84 = transform(aeqd_to_wgs84, buffer_find)
+   wkt=buffer_wgs84.wkt
+   wkt_coord_string=wkt.replace('POLYGON ((','')
+   wkt_coord_string=wkt_coord_string.replace('))','')
+   wkt_coord_string=wkt_coord_string.replace('[','')
+   wkt_coord_string=wkt_coord_string.replace(']','')
+   wkt_coord_list=wkt_coord_string.split(', ')
+   coord_list=list();geometries=[]
+   for coord in wkt_coord_list:
+      coord_append=coord.split(' ')
+      c_append_list=list()
+      for c in coord_append:
+         c_append=float(c)
+         c_append_list.append(c_append)
+      coord_list.append(c_append_list)
+   geometries.append({'type':'Polygon', 'coordinates':[coord_list]})
+   lonattr=str(self.lonkey)
+   output_adl=output
+   output=output.assign_coords({self.lonkey: getattr(output,lonattr) - 360})
+   output_bdl=output
+   output=xr.concat([output_bdl,output_adl],dim='lon_0')
+   output=output.rio.set_spatial_dims(self.lonkey,self.latkey,inplace=True)
+   output=output.rio.write_crs(4326)
+   output=output.rio.clip(geometries,output.rio.crs)
+   for dv in output.data_vars:
+      narray=output[dv].values
+      narray[narray>9998]=np.nan
+      output[dv].values=narray
+   if outputFormat=="NetCDF":
+      grib_template=self.DATASET_FOLDER+'/'+self.model+'/'+self.cycle+'/'+self.cycle+'_'+self.model+'_template.grib'
+      convert_to_grib.create_grib(output,grib_template,self.lv_list,self.uuid,self.dir_root,True)
+      data = xr.open_dataset(self.dir_root+'/output-'+self.uuid+'.grb', engine='cfgrib')
+      data=data.rio.write_crs(4326)
+      try:
+         data=data.rio.clip(geometries,data.rio.crs)
+      except:
+         data=data.assign_coords({'longitude': getattr(data,'longitude') - 360})
+         data=data.rio.clip(geometries,data.rio.crs)
+      data.attrs['_FillValue']='nan'
+      conversion=data.to_netcdf(self.dir_root+'/output-'+self.uuid+'.nc')
+      return flask.send_from_directory(self.dir_root,'output-'+self.uuid+'.nc',as_attachment=True), self.dir_root+'/output-'+self.uuid+'.nc'
+   if outputFormat=="CoverageJSON":
+      output=output.to_dict()
+      output=self.pt_to_covjson(output,coords,'radius')
+      return json.dumps(output, indent=4, sort_keys=True, default=str).replace('NaN','null'), 'no_delete'
+   if outputFormat=="GRIB":
+      grib_template=self.DATASET_FOLDER+'/'+self.model+'/'+self.cycle+'/'+self.cycle+'_'+self.model+'_template.grib'
+      convert_to_grib.create_grib(output,grib_template,self.lv_list,self.uuid,self.dir_root,True)
+      output={'result': 'grib file should display for download'}
+      return flask.send_from_directory(self.dir_root,'output-'+self.uuid+'.grb',as_attachment=True), self.dir_root+'/output-'+self.uuid+'.grb'
+   if outputFormat=="COGeotiff":
+      f_location,zip_bool=export_geotiff(self,output)
+      if zip_bool==False:
+         return flask.send_from_directory(self.dir_root,self.uuid+'.tif',as_attachment=True), self.dir_root+'/'+self.uuid+'.tif'
+      if zip_bool==True:
+         root=self.dir_root+'/temp_dir/'
+         zip_file=f_location.split('/')[-1]+'.zip'
+         return flask.send_from_directory(root,zip_file,as_attachment=True), 'no_delete'
+   return
 
 
 def get_polygon_data(self,dataset, qtype, coords, time_range, z_value, params, instance, outputFormat, output):
