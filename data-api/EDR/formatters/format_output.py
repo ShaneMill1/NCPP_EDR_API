@@ -184,16 +184,28 @@ class FormatOutput(object):
         })
         return links
 
+    def link_template_radius(self, links, inpath):
+        in_parts = inpath[1:].split('/')
+        links.append({
+            "href": self.server + inpath + "",
+            "rel": "self",
+            "type": "radius",
+            "title": "Radius Query",
+            "self": "Radius"
+        })
+        return links
+
     def link_template_polygon(self, links, inpath):
         in_parts = inpath[1:].split('/')
         links.append({
             "href": self.server + inpath + "",
             "rel": "self",
-            "type": "polygon",
-            "title": "Polygon Query",
-            "self": "Polygon"
+            "type": "area",
+            "title": "Area Query",
+            "self": "Area"
         })
         return links
+
 
     def link_template_cube(self, links, inpath):
         in_parts = inpath[1:].split('/')
@@ -490,6 +502,8 @@ class FormatOutput(object):
         point_query_selector=point+'_query_selector'
         polygon='/collections/'+collname+'/instances/'+auto_cycle+'/area'
         polygon_query_selector=polygon+'_query_selector'
+        radius='/collections/'+collname+'/instances/'+auto_cycle+'/radius'
+        radius_query_selector='/collections/'+collname+'/instances/'+auto_cycle+'/radius_query_selector'
         cube='/collections/'+collname+'/instances/'+auto_cycle+'/cube'
         cube_query_selector=cube+'_query_selector'
         trajectory='/collections/'+collname+'/instances/'+auto_cycle+'/trajectory'
@@ -498,16 +512,18 @@ class FormatOutput(object):
         corridor_query_selector=corridor+'_query_selector'
         orig=self.link_template( [], '/collections/'+collname+'/instances/'+auto_cycle)
         point=self.link_template_point( [], point)
+        radius=self.link_template_radius([],radius)
         polygon=self.link_template_polygon( [], polygon)
         cube=self.link_template_cube( [], cube)
         trajectory=self.link_template_trajectory( [], trajectory)
         corridor=self.link_template_corridor( [], corridor)
         point_query_selector=self.link_template_point( [], point_query_selector)
+        radius_query_selector=self.link_template_radius( [], radius_query_selector)
         polygon_query_selector=self.link_template_polygon( [], polygon_query_selector)
         cube_query_selector=self.link_template_cube( [], cube_query_selector) 
         trajectory_query_selector=self.link_template_trajectory( [], trajectory_query_selector)
         corridor_query_selector=self.link_template_corridor( [], corridor_query_selector)
-        link_list=orig+point+polygon+cube+trajectory+corridor+point_query_selector+polygon_query_selector+cube_query_selector+trajectory_query_selector+corridor_query_selector
+        link_list=orig+point+radius+polygon+cube+trajectory+corridor+point_query_selector+radius_query_selector+polygon_query_selector+cube_query_selector+trajectory_query_selector+corridor_query_selector
         output['links']=link_list
         output['collections']=collname
         output['title']=collname

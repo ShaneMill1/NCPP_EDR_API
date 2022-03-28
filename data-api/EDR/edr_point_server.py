@@ -17,7 +17,7 @@ from EDR.formatters.format_output import FormatOutput
 from EDR.util import style_html
 from flask_cors import CORS
 from jinja2 import Environment, FileSystemLoader
-from distributed import Client
+from distributed import Client, LocalCluster
 import time
 
 app = Flask(__name__, static_url_path='/static')
@@ -27,6 +27,10 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300
 tcp_scheduler=os.environ['tcp_scheculer']
 client=Client(tcp_scheduler)
 time.sleep(3)
+
+#cluster = LocalCluster(dashboard_address=':5610',scheduler_port=5600)
+#client = Client(cluster)
+
 
 with open(os.environ.get('EDR_CONFIG')) as fh:
    CONFIG = yaml.safe_load(fh)
@@ -298,6 +302,20 @@ def get_identifer_details(collection):
         response.headers = headers
 
     return response
+
+
+@app.route('/collections/<collection>/instances/<identifier>/radius')
+def get_radius_data_automated(collection, identifier):
+   headers, status_code, content = api_.get_feature(request.headers, request.args, collection, identifier)
+   response = make_response(content, status_code)
+   if headers:
+      response.headers = headers
+   return response
+
+@app.route('/collections/<collection>/instances/<identifier>/radius_query_selector')
+def get_radius_data_automated_query_selector(collection, identifier):
+   return _render_j2_template(CONFIG, "index_p.html", None)
+
 
 
 @app.route('/collections/<collection>', strict_slashes=False)
