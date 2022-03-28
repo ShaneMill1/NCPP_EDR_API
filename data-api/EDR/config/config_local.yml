@@ -2,7 +2,7 @@ server:
     bind:
         host: 0.0.0.0
         port: 5400
-    url: http://ec2-54-196-89-32.compute-1.amazonaws.com:5400/
+    url: http://ec2-34-203-0-114.compute-1.amazonaws.com:5400/
     mimetype: application/json; charset=UTF-8
     encoding: utf-8
     language: en-US
@@ -126,7 +126,7 @@ datasets:
             output_formats: ['CoverageJSON','GRIB','NetCDF','COGeotiff']
             model: [gfs_100]
             cycle: [00z]
-            data_source: 's3://enviroapi-bucket-1/zarr'
+            data_source: 's3://enviroapi-bucket-2/zarr'
     national_water_model:
         name: national_water_model
         title: National Water Model Reanalysis
